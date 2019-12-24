@@ -627,19 +627,6 @@ public class PGraphicsJava2D extends PGraphics {
 
   // SHAPE CREATION
 
-
-  @Override
-  protected PShape createShapeFamily(int type) {
-    return new PShape(this, type);
-  }
-
-
-  @Override
-  protected PShape createShapePrimitive(int kind, float... p) {
-    return new PShape(this, kind, p);
-  }
-
-
 //  @Override
 //  public PShape createShape(PShape source) {
 //    return PShapeOpenGL.createShape2D(this, source);
@@ -1000,7 +987,6 @@ public class PGraphicsJava2D extends PGraphics {
    * ( end auto-generated )
    *
    * @webref Rendering
-   * @param mode the blending mode to use
    */
   @Override
   protected void blendModeImpl() {
@@ -1836,22 +1822,6 @@ public class PGraphicsJava2D extends PGraphics {
   //////////////////////////////////////////////////////////////
 
   // SHAPE I/O
-
-
-  //public PShape loadShape(String filename)
-
-
-  @Override
-  public PShape loadShape(String filename, String options) {
-    String extension = PApplet.getExtension(filename);
-    if (extension.equals("svg") || extension.equals("svgz")) {
-      return new PShapeJava2D(parent.loadXML(filename));
-    }
-    PGraphics.showWarning("Unsupported format: " + filename);
-    return null;
-  }
-
-
 
   //////////////////////////////////////////////////////////////
 

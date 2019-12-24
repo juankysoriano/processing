@@ -151,7 +151,7 @@ public class PJOGL extends PGL {
 
   @Override
   public Object getNative() {
-    return sketch.getSurface().getNative();
+    return graphics.surface.getNative();
   }
 
 
@@ -223,7 +223,7 @@ public class PJOGL extends PGL {
 
   @Override
   protected float getPixelScale() {
-    PSurface surf = sketch.getSurface();
+    PSurface surf =graphics.surface;
     if (surf == null) {
       return graphics.pixelDensity;
     } else if (surf instanceof PSurfaceJOGL) {
@@ -290,17 +290,15 @@ public class PJOGL extends PGL {
 
   @Override
   protected void swapBuffers()  {
-    PSurfaceJOGL surf = (PSurfaceJOGL)sketch.getSurface();
+    PSurfaceJOGL surf = (PSurfaceJOGL)graphics.surface;
     surf.window.swapBuffers();
   }
 
 
   @Override
   protected void initFBOLayer() {
-    if (0 < sketch.frameCount) {
-      if (isES()) initFBOLayerES();
-      else initFBOLayerGL();
-    }
+    if (isES()) initFBOLayerES();
+    else initFBOLayerGL();
   }
 
 
@@ -326,7 +324,7 @@ public class PJOGL extends PGL {
     // of the default framebuffer (the screen) contains the previous frame:
     // https://www.opengl.org/wiki/Default_Framebuffer
     // so it is copied to the front texture of the FBO layer:
-    if (pclearColor || 0 < pgeomCount || !sketch.isLooping()) {
+    if (pclearColor || 0 < pgeomCount) {
       if (hasReadBuffer()) readBuffer(FRONT);
     } else {
       // ...except when the previous frame has not been cleared and nothing was

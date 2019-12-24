@@ -55,9 +55,7 @@ import javax.imageio.metadata.*;
  * @webref image
  * @usage Web &amp; Application
  * @instanceName pimg any object of type PImage
- * @see PApplet#loadImage(String)
- * @see PApplet#imageMode(int)
- * @see PApplet#createImage(int, int, int)
+ * @see PApplet#loadImageIO(String)
  */
 public class PImage implements PConstants, Cloneable {
 
@@ -125,11 +123,6 @@ public class PImage implements PConstants, Cloneable {
    */
   public int height;
 
-  /**
-   * Path to parent object that will be used with save().
-   * This prevents users from needing savePath() to use PImage.save().
-   */
-  public PApplet parent;
 
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -197,10 +190,7 @@ public class PImage implements PConstants, Cloneable {
    * ( end auto-generated )
    * @nowebref
    * @usage web_application
-   * @see PApplet#loadImage(String, String)
-   * @see PApplet#imageMode(int)
-   * @see PApplet#createImage(int, int, int)
-   */
+     * */
   public PImage() {
     format = ARGB;  // default to ARGB images for release 0116
     pixelDensity = 1;
@@ -720,9 +710,6 @@ public class PImage implements PConstants, Cloneable {
    * @usage web_application
    * @param x x-coordinate of the pixel
    * @param y y-coordinate of the pixel
-   * @see PApplet#set(int, int, int)
-   * @see PApplet#pixels
-   * @see PApplet#copy(PImage, int, int, int, int, int, int, int, int)
    */
   public int get(int x, int y) {
     if ((x < 0) || (y < 0) || (x >= pixelWidth) || (y >= pixelHeight)) return 0;
@@ -789,7 +776,6 @@ public class PImage implements PConstants, Cloneable {
     PImage target = new PImage(targetWidth / pixelDensity,
                                targetHeight / pixelDensity,
                                targetFormat, pixelDensity);
-    target.parent = parent;  // parent may be null so can't use createImage()
     if (w > 0 && h > 0) {
       getImpl(x, y, w, h, target, targetX, targetY);
     }
@@ -1850,7 +1836,6 @@ public class PImage implements PConstants, Cloneable {
    * @param dh destination image height
    * @param mode Either BLEND, ADD, SUBTRACT, LIGHTEST, DARKEST, DIFFERENCE, EXCLUSION, MULTIPLY, SCREEN, OVERLAY, HARD_LIGHT, SOFT_LIGHT, DODGE, BURN
    *
-   * @see PApplet#alpha(int)
    * @see PImage#copy(PImage, int, int, int, int, int, int, int, int)
    * @see PImage#blendColor(int,int,int)
    */
@@ -3374,21 +3359,15 @@ int testFunction(int dst, int src) {
   public boolean save(String filename) {  // ignore
     boolean success = false;
 
-    if (parent != null) {
-      // use savePath(), so that the intermediate directories are created
-      filename = parent.savePath(filename);
-
+    File file = new File(filename);
+    if (file.isAbsolute()) {
+      // make sure that the intermediate folders have been created
+      PApplet.createPath(file);
     } else {
-      File file = new File(filename);
-      if (file.isAbsolute()) {
-        // make sure that the intermediate folders have been created
-        PApplet.createPath(file);
-      } else {
-        String msg =
-          "PImage.save() requires an absolute path. " +
-          "Use createImage(), or pass savePath() to save().";
-        PGraphics.showException(msg);
-      }
+      String msg =
+              "PImage.save() requires an absolute path. " +
+                      "Use createImage(), or pass savePath() to save().";
+      PGraphics.showException(msg);
     }
 
     // Make sure the pixel data is ready to go

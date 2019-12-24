@@ -43,83 +43,15 @@ public class PSurfaceNone implements PSurface {
     this.graphics = graphics;
   }
 
-
-  @Override
-  public void initOffscreen(PApplet sketch) {
-    this.sketch = sketch;
-
-    setSize(sketch.sketchWidth(), sketch.sketchHeight());
-  }
-
-
-//  public Component initComponent(PApplet sketch) {
+  //  public Component initComponent(PApplet sketch) {
 //    return null;
 //  }
-
-
-  @Override
-  public void initFrame(PApplet sketch) {
-    throw new IllegalStateException("initFrame() not available with " +
-                                    getClass().getSimpleName());
-  }
-
 
   public Object getNative() {
     return null;
   }
 
-
-  /** Set the window (and dock, or whatever necessary) title. */
-  @Override
-  public void setTitle(String title) {
-    // You're in a utopian PSurface implementation where titles don't exist.
-  }
-
-
-  @Override
-  public void setIcon(PImage image) {
-    // I ain't visible, man.
-  }
-
-
-  /** Show or hide the window. */
-  @Override
-  public void setVisible(boolean visible) {
-    // I'm always invisible. You can't catch me.
-  }
-
-
-  /** Set true if we want to resize things (default is not resizable) */
-  @Override
-  public void setResizable(boolean resizable) {
-    // I don't need size to know my worth.
-  }
-
-
-  @Override
-  public void placeWindow(int[] location, int[] editorLocation) { }
-
-
-  @Override
-  public void placePresent(int stopColor) { }
-
-
-  @Override
-  public void setupExternalMessages() { }
-
-
-  @Override
-  public void setAlwaysOnTop(boolean always) { }
-
-
   //
-
-
-  @Override
-  public void setLocation(int x, int y) {
-    // I'm everywhere, because I'm nowhere.
-  }
-
 
   @Override
   public void setSize(int wide, int high) {
@@ -127,18 +59,7 @@ public class PSurfaceNone implements PSurface {
       //System.out.format("frame visible %b, setSize(%d, %d) %n", frame.isVisible(), wide, high);
       new Exception(String.format("setSize(%d, %d)", wide, high)).printStackTrace(System.out);
     }
-
-    //if (wide == sketchWidth && high == sketchHeight) {  // doesn't work on launch
-    if (wide == sketch.width && high == sketch.height) {
-      if (PApplet.DEBUG) {
-        new Exception("w/h unchanged " + wide + " " + high).printStackTrace(System.out);
-      }
-      return;  // unchanged, don't rebuild everything
-    }
-
     //throw new RuntimeException("implement me, see readme.md");
-    sketch.width = wide;
-    sketch.height = high;
 
     // set PGraphics variables for width/height/pixelWidth/pixelHeight
     graphics.setSize(wide, high);
@@ -165,15 +86,6 @@ public class PSurfaceNone implements PSurface {
 //  public void blit() {
 //    // TODO Auto-generated method stub
 //  }
-
-  public void setCursor(int kind) { }
-
-  public void setCursor(PImage image, int hotspotX, int hotspotY) { }
-
-  public void showCursor() { }
-
-  public void hideCursor() { }
-
 
   //
 
@@ -254,7 +166,7 @@ public class PSurfaceNone implements PSurface {
 
     // broken out so it can be overridden by Danger et al
     public void callDraw() {
-      sketch.handleDraw();
+
     }
 
     /**
@@ -292,9 +204,8 @@ public class PSurfaceNone implements PSurface {
       */
 
       // un-pause the sketch and get rolling
-      sketch.start();
 
-      while ((Thread.currentThread() == thread) && !sketch.finished) {
+      while ((Thread.currentThread() == thread)) {
         checkPause();
 
         // Don't resize the renderer from the EDT (i.e. from a ComponentEvent),
@@ -357,14 +268,6 @@ public class PSurfaceNone implements PSurface {
         }
 
         beforeTime = System.nanoTime();
-      }
-
-      sketch.dispose();  // call to shutdown libs?
-
-      // If the user called the exit() function, the window should close,
-      // rather than the sketch just halting.
-      if (sketch.exitCalled) {
-        sketch.exitActual();
       }
     }
   }

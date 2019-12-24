@@ -196,7 +196,7 @@ public class PGraphics extends PImage implements PConstants {
    * True if this is the main graphics context for a sketch.
    * False for offscreen buffers retrieved via createGraphics().
    */
-  protected boolean primaryGraphics;
+  protected boolean primaryGraphics = false;
 
 //  // TODO nervous about leaving this here since it seems likely to create
 //  // back-references where we don't want them
@@ -545,7 +545,7 @@ public class PGraphics extends PImage implements PConstants {
   public Image image;
 
   /** Surface object that we're talking to */
-  protected PSurface surface;
+  public PSurface surface;
 
   // ........................................................
 
@@ -723,16 +723,6 @@ public class PGraphics extends PImage implements PConstants {
   public PGraphics() {
     // In 3.1.2, giving up on the async image saving as the default
     hints[DISABLE_ASYNC_SAVEFRAME] = true;
-  }
-
-
-  public void setParent(PApplet parent) {  // ignore
-    this.parent = parent;
-
-    // Some renderers (OpenGL) need to know what smoothing level will be used
-    // before the rendering surface is even created.
-    smooth = parent.sketchSmooth();
-    pixelDensity = parent.sketchPixelDensity();
   }
 
 
@@ -1158,7 +1148,6 @@ public class PGraphics extends PImage implements PConstants {
    * @param which name of the hint to be enabled or disabled
    * @see PGraphics
    * @see PApplet#createGraphics(int, int, String, String)
-   * @see PApplet#size(int, int)
    */
   @SuppressWarnings("deprecation")
   public void hint(int which) {
@@ -1168,9 +1157,7 @@ public class PGraphics extends PImage implements PConstants {
                   "Use createFont() instead.");
     }
     if (which == ENABLE_KEY_REPEAT) {
-      parent.keyRepeatEnabled = true;
     } else if (which == DISABLE_KEY_REPEAT) {
-      parent.keyRepeatEnabled = false;
     }
     if (which > 0) {
       hints[which] = true;
@@ -1223,7 +1210,6 @@ public class PGraphics extends PImage implements PConstants {
    * ( end auto-generated )
    * @webref shape:vertex
    * @param kind Either POINTS, LINES, TRIANGLES, TRIANGLE_FAN, TRIANGLE_STRIP, QUADS, or QUAD_STRIP
-   * @see PShape
    * @see PGraphics#endShape()
    * @see PGraphics#vertex(float, float, float, float, float)
    * @see PGraphics#curveVertex(float, float, float)
@@ -1721,7 +1707,6 @@ public class PGraphics extends PImage implements PConstants {
    * ( end auto-generated )
    * @webref shape:vertex
    * @param mode use CLOSE to close the shape
-   * @see PShape
    * @see PGraphics#beginShape(int)
    */
   public void endShape(int mode) {
@@ -1733,151 +1718,11 @@ public class PGraphics extends PImage implements PConstants {
 
   // SHAPE I/O
 
-
-  /**
-   * @webref shape
-   * @param filename name of file to load, can be .svg or .obj
-   * @see PShape
-   * @see PApplet#createShape()
-   */
-  public PShape loadShape(String filename) {
-    return loadShape(filename, null);
-  }
-
-
-  /**
-   * @nowebref
-   */
-  public PShape loadShape(String filename, String options) {
-    showMissingWarning("loadShape");
-    return null;
-  }
-
-
-
-  //////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////
 
   // SHAPE CREATION
 
-
-  /**
-   * @webref shape
-   * @see PShape
-   * @see PShape#endShape()
-   * @see PApplet#loadShape(String)
-   */
-  public PShape createShape() {
-    // Defaults to GEOMETRY (rather than GROUP like the default constructor)
-    // because that's how people will use it within a sketch.
-    return createShape(PShape.GEOMETRY);
-  }
-
-
-  // POINTS, LINES, TRIANGLES, TRIANGLE_FAN, TRIANGLE_STRIP, QUADS, QUAD_STRIP
-  public PShape createShape(int type) {
-    // If it's a PRIMITIVE, it needs the 'params' field anyway
-    if (type == PConstants.GROUP ||
-        type == PShape.PATH ||
-        type == PShape.GEOMETRY) {
-      return createShapeFamily(type);
-    }
-    final String msg =
-      "Only GROUP, PShape.PATH, and PShape.GEOMETRY work with createShape()";
-    throw new IllegalArgumentException(msg);
-  }
-
-
-  /** Override this method to return an appropriate shape for your renderer */
-  protected PShape createShapeFamily(int type) {
-    return new PShape(this, type);
-//    showMethodWarning("createShape()");
-//    return null;
-  }
-
-
-  /**
-   * @param kind either POINT, LINE, TRIANGLE, QUAD, RECT, ELLIPSE, ARC, BOX, SPHERE
-   * @param p parameters that match the kind of shape
-   */
-  public PShape createShape(int kind, float... p) {
-    int len = p.length;
-
-    if (kind == POINT) {
-      if (is3D() && len != 2 && len != 3) {
-        throw new IllegalArgumentException("Use createShape(POINT, x, y) or createShape(POINT, x, y, z)");
-      } else if (is2D() && len != 2) {
-        throw new IllegalArgumentException("Use createShape(POINT, x, y)");
-      }
-      return createShapePrimitive(kind, p);
-
-    } else if (kind == LINE) {
-      if (is3D() && len != 4 && len != 6) {
-        throw new IllegalArgumentException("Use createShape(LINE, x1, y1, x2, y2) or createShape(LINE, x1, y1, z1, x2, y2, z1)");
-      } else if (is2D() && len != 4) {
-        throw new IllegalArgumentException("Use createShape(LINE, x1, y1, x2, y2)");
-      }
-      return createShapePrimitive(kind, p);
-
-    } else if (kind == TRIANGLE) {
-      if (len != 6) {
-        throw new IllegalArgumentException("Use createShape(TRIANGLE, x1, y1, x2, y2, x3, y3)");
-      }
-      return createShapePrimitive(kind, p);
-
-    } else if (kind == QUAD) {
-      if (len != 8) {
-        throw new IllegalArgumentException("Use createShape(QUAD, x1, y1, x2, y2, x3, y3, x4, y4)");
-      }
-      return createShapePrimitive(kind, p);
-
-    } else if (kind == RECT) {
-      if (len != 4 && len != 5 && len != 8) {
-        throw new IllegalArgumentException("Wrong number of parameters for createShape(RECT), see the reference");
-      }
-      return createShapePrimitive(kind, p);
-
-    } else if (kind == ELLIPSE) {
-      if (len != 4) {
-        throw new IllegalArgumentException("Use createShape(ELLIPSE, x, y, w, h)");
-      }
-      return createShapePrimitive(kind, p);
-
-    } else if (kind == ARC) {
-      if (len != 6 && len != 7) {
-        throw new IllegalArgumentException("Use createShape(ARC, x, y, w, h, start, stop) or createShape(ARC, x, y, w, h, start, stop, arcMode)");
-      }
-      return createShapePrimitive(kind, p);
-
-    } else if (kind == BOX) {
-      if (!is3D()) {
-        throw new IllegalArgumentException("createShape(BOX) is not supported in 2D");
-      } else if (len != 1 && len != 3) {
-        throw new IllegalArgumentException("Use createShape(BOX, size) or createShape(BOX, width, height, depth)");
-      }
-      return createShapePrimitive(kind, p);
-
-    } else if (kind == SPHERE) {
-      if (!is3D()) {
-        throw new IllegalArgumentException("createShape(SPHERE) is not supported in 2D");
-      } else if (len != 1) {
-        throw new IllegalArgumentException("Use createShape(SPHERE, radius)");
-      }
-      return createShapePrimitive(kind, p);
-    }
-    throw new IllegalArgumentException("Unknown shape type passed to createShape()");
-  }
-
-
-  /** Override this to have a custom shape object used by your renderer. */
-  protected PShape createShapePrimitive(int kind, float... p) {
-//    showMethodWarning("createShape()");
-//    return null;
-    return new PShape(this, kind, p);
-  }
-
-
-
-  //////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////
 
   // SHADERS
 
@@ -2487,7 +2332,6 @@ public class PGraphics extends PImage implements PConstants {
    * @param y2 y-coordinate of the second point
    * @param x3 x-coordinate of the third point
    * @param y3 y-coordinate of the third point
-   * @see PApplet#beginShape()
    */
   public void triangle(float x1, float y1, float x2, float y2,
                        float x3, float y3) {
@@ -2776,8 +2620,6 @@ public class PGraphics extends PImage implements PConstants {
    * ( end auto-generated )
    * @webref shape:attributes
    * @param mode either CENTER, RADIUS, CORNER, or CORNERS
-   * @see PApplet#ellipse(float, float, float, float)
-   * @see PApplet#arc(float, float, float, float, float, float)
    */
   public void ellipseMode(int mode) {
     ellipseMode = mode;
@@ -2798,8 +2640,6 @@ public class PGraphics extends PImage implements PConstants {
    * @param b y-coordinate of the ellipse
    * @param c width of the ellipse by default
    * @param d height of the ellipse by default
-   * @see PApplet#ellipseMode(int)
-   * @see PApplet#arc(float, float, float, float, float, float)
    */
   public void ellipse(float a, float b, float c, float d) {
     float x = a;
@@ -2857,8 +2697,6 @@ public class PGraphics extends PImage implements PConstants {
    * @param d height of the arc's ellipse by default
    * @param start angle to start the arc, specified in radians
    * @param stop angle to stop the arc, specified in radians
-   * @see PApplet#ellipse(float, float, float, float)
-   * @see PApplet#ellipseMode(int)
    * @see PApplet#radians(float)
    * @see PApplet#degrees(float)
    */
@@ -2941,8 +2779,6 @@ public class PGraphics extends PImage implements PConstants {
    * @param x x-coordinate of the ellipse
    * @param y y-coordinate of the ellipse
    * @param extent width and height of the ellipse by default
-   * @see PApplet#ellipse(float, float, float, float)
-   * @see PApplet#ellipseMode(int)
    */
   public void circle(float x, float y, float extent) {
     ellipse(x, y, extent, extent);
@@ -3703,18 +3539,14 @@ public class PGraphics extends PImage implements PConstants {
 
 
   public void smooth(int quality) {  // ignore
-    if (primaryGraphics) {
-      parent.smooth(quality);
-    } else {
-      // for createGraphics(), make sure beginDraw() not called yet
-      if (settingsInited) {
-        // ignore if it's just a repeat of the current state
-        if (this.smooth != quality) {
-          smoothWarning("smooth");
-        }
-      } else {
-        this.smooth = quality;
+    // for createGraphics(), make sure beginDraw() not called yet
+    if (settingsInited) {
+      // ignore if it's just a repeat of the current state
+      if (this.smooth != quality) {
+        smoothWarning("smooth");
       }
+    } else {
+      this.smooth = quality;
     }
   }
 
@@ -3755,7 +3587,6 @@ public class PGraphics extends PImage implements PConstants {
    *
    * @webref image:loading_displaying
    * @param mode either CORNER, CORNERS, or CENTER
-   * @see PApplet#loadImage(String, String)
    * @see PImage
    * @see PGraphics#image(PImage, float, float, float, float)
    * @see PGraphics#background(float, float, float, float)
@@ -3801,7 +3632,6 @@ public class PGraphics extends PImage implements PConstants {
    * @param img the image to display
    * @param a x-coordinate of the image by default
    * @param b y-coordinate of the image by default
-   * @see PApplet#loadImage(String, String)
    * @see PImage
    * @see PGraphics#imageMode(int)
    * @see PGraphics#tint(float)
@@ -3953,154 +3783,7 @@ public class PGraphics extends PImage implements PConstants {
 
   // SHAPE
 
-
-  /**
-   * ( begin auto-generated from shapeMode.xml )
-   *
-   * Modifies the location from which shapes draw. The default mode is
-   * <b>shapeMode(CORNER)</b>, which specifies the location to be the upper
-   * left corner of the shape and uses the third and fourth parameters of
-   * <b>shape()</b> to specify the width and height. The syntax
-   * <b>shapeMode(CORNERS)</b> uses the first and second parameters of
-   * <b>shape()</b> to set the location of one corner and uses the third and
-   * fourth parameters to set the opposite corner. The syntax
-   * <b>shapeMode(CENTER)</b> draws the shape from its center point and uses
-   * the third and forth parameters of <b>shape()</b> to specify the width
-   * and height. The parameter must be written in "ALL CAPS" because
-   * Processing is a case sensitive language.
-   *
-   * ( end auto-generated )
-   *
-   * @webref shape:loading_displaying
-   * @param mode either CORNER, CORNERS, CENTER
-   * @see PShape
-   * @see PGraphics#shape(PShape)
-   * @see PGraphics#rectMode(int)
-   */
-  public void shapeMode(int mode) {
-    this.shapeMode = mode;
-  }
-
-
-  public void shape(PShape shape) {
-    if (shape.isVisible()) {  // don't do expensive matrix ops if invisible
-      // Flushing any remaining geometry generated in the immediate mode
-      // to avoid depth-sorting issues.
-      flush();
-
-      if (shapeMode == CENTER) {
-        pushMatrix();
-        translate(-shape.getWidth()/2, -shape.getHeight()/2);
-      }
-
-      shape.draw(this); // needs to handle recorder too
-
-      if (shapeMode == CENTER) {
-        popMatrix();
-      }
-    }
-  }
-
-
-  /**
-   * ( begin auto-generated from shape.xml )
-   *
-   * Displays shapes to the screen. The shapes must be in the sketch's "data"
-   * directory to load correctly. Select "Add file..." from the "Sketch" menu
-   * to add the shape. Processing currently works with SVG shapes only. The
-   * <b>sh</b> parameter specifies the shape to display and the <b>x</b> and
-   * <b>y</b> parameters define the location of the shape from its upper-left
-   * corner. The shape is displayed at its original size unless the
-   * <b>width</b> and <b>height</b> parameters specify a different size. The
-   * <b>shapeMode()</b> function changes the way the parameters work. A call
-   * to <b>shapeMode(CORNERS)</b>, for example, will change the width and
-   * height parameters to define the x and y values of the opposite corner of
-   * the shape.
-   * <br /><br />
-   * Note complex shapes may draw awkwardly with P3D. This renderer does not
-   * yet support shapes that have holes or complicated breaks.
-   *
-   * ( end auto-generated )
-   *
-   * @webref shape:loading_displaying
-   * @param shape the shape to display
-   * @param x x-coordinate of the shape
-   * @param y y-coordinate of the shape
-   * @see PShape
-   * @see PApplet#loadShape(String)
-   * @see PGraphics#shapeMode(int)
-   *
-   * Convenience method to draw at a particular location.
-   */
-  public void shape(PShape shape, float x, float y) {
-    if (shape.isVisible()) {  // don't do expensive matrix ops if invisible
-      flush();
-
-      pushMatrix();
-
-      if (shapeMode == CENTER) {
-        translate(x - shape.getWidth()/2, y - shape.getHeight()/2);
-
-      } else if ((shapeMode == CORNER) || (shapeMode == CORNERS)) {
-        translate(x, y);
-      }
-      shape.draw(this);
-
-      popMatrix();
-    }
-  }
-
-
-  // TODO unapproved
-  protected void shape(PShape shape, float x, float y, float z) {
-    showMissingWarning("shape");
-  }
-
-
-  /**
-   * @param a x-coordinate of the shape
-   * @param b y-coordinate of the shape
-   * @param c width to display the shape
-   * @param d height to display the shape
-   */
-  public void shape(PShape shape, float a, float b, float c, float d) {
-    if (shape.isVisible()) {  // don't do expensive matrix ops if invisible
-      flush();
-
-      pushMatrix();
-
-      if (shapeMode == CENTER) {
-        // x and y are center, c and d refer to a diameter
-        translate(a - c/2f, b - d/2f);
-        scale(c / shape.getWidth(), d / shape.getHeight());
-
-      } else if (shapeMode == CORNER) {
-        translate(a, b);
-        scale(c / shape.getWidth(), d / shape.getHeight());
-
-      } else if (shapeMode == CORNERS) {
-        // c and d are x2/y2, make them into width/height
-        c -= a;
-        d -= b;
-        // then same as above
-        translate(a, b);
-        scale(c / shape.getWidth(), d / shape.getHeight());
-      }
-      shape.draw(this);
-
-      popMatrix();
-    }
-  }
-
-
-  // TODO unapproved
-  protected void shape(PShape shape, float x, float y, float z, float c, float d, float e) {
-    showMissingWarning("shape");
-  }
-
-
-
-  //////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////
 
   // TEXT/FONTS
 
@@ -4122,7 +3805,7 @@ public class PGraphics extends PImage implements PConstants {
     try {
       InputStream stream = null;
       if (lowerName.endsWith(".otf") || lowerName.endsWith(".ttf")) {
-        stream = parent.createInput(name);
+        stream = PApplet.createInput(name);
         if (stream == null) {
           System.err.println("The font \"" + name + "\" " +
                              "is missing or inaccessible, make sure " +
@@ -4130,7 +3813,7 @@ public class PGraphics extends PImage implements PConstants {
                              "added to your sketch and is readable.");
           return null;
         }
-        baseFont = Font.createFont(Font.TRUETYPE_FONT, parent.createInput(name));
+        baseFont = Font.createFont(Font.TRUETYPE_FONT, PApplet.createInput(name));
 
       } else {
         baseFont = PFont.findFont(name);
@@ -4147,9 +3830,9 @@ public class PGraphics extends PImage implements PConstants {
 
   private PFont createFont(Font baseFont, float size,
                            boolean smooth, char[] charset, boolean stream) {
-    return new PFont(baseFont.deriveFont(size * parent.pixelDensity),
+    return new PFont(baseFont.deriveFont(size * pixelDensity),
                      smooth, charset, stream,
-                     parent.pixelDensity);
+                     pixelDensity);
   }
 
 
@@ -4191,7 +3874,6 @@ public class PGraphics extends PImage implements PConstants {
    * @webref typography:attributes
    * @param alignX horizontal alignment, either LEFT, CENTER, or RIGHT
    * @param alignY vertical alignment, either TOP, BOTTOM, CENTER, or BASELINE
-   * @see PApplet#loadFont(String)
    * @see PFont
    * @see PGraphics#text(String, float, float)
    * @see PGraphics#textSize(float)
@@ -4269,8 +3951,6 @@ public class PGraphics extends PImage implements PConstants {
    *
    * @webref typography:loading_displaying
    * @param which any variable of the type PFont
-   * @see PApplet#createFont(String, float, boolean)
-   * @see PApplet#loadFont(String)
    * @see PFont
    * @see PGraphics#text(String, float, float)
    * @see PGraphics#textSize(float)
@@ -4356,7 +4036,6 @@ public class PGraphics extends PImage implements PConstants {
    *
    * @webref typography:attributes
    * @param leading the size in pixels for spacing between lines
-   * @see PApplet#loadFont(String)
    * @see PFont#PFont
    * @see PGraphics#text(String, float, float)
    * @see PGraphics#textFont(PFont)
@@ -4392,12 +4071,10 @@ public class PGraphics extends PImage implements PConstants {
    *
    * @webref typography:attributes
    * @param mode either MODEL or SHAPE
-   * @see PApplet#loadFont(String)
    * @see PFont#PFont
    * @see PGraphics#text(String, float, float)
    * @see PGraphics#textFont(PFont)
    * @see PGraphics#beginRaw(PGraphics)
-   * @see PApplet#createFont(String, float, boolean)
    */
   public void textMode(int mode) {
     // CENTER and MODEL overlap (they're both 3)
@@ -4438,7 +4115,6 @@ public class PGraphics extends PImage implements PConstants {
    *
    * @webref typography:attributes
    * @param size the size of the letters in units of pixels
-   * @see PApplet#loadFont(String)
    * @see PFont#PFont
    * @see PGraphics#text(String, float, float)
    * @see PGraphics#textFont(PFont)
@@ -4502,7 +4178,6 @@ public class PGraphics extends PImage implements PConstants {
    *
    * @webref typography:attributes
    * @param str the String of characters to measure
-   * @see PApplet#loadFont(String)
    * @see PFont#PFont
    * @see PGraphics#text(String, float, float)
    * @see PGraphics#textFont(PFont)
@@ -6274,7 +5949,6 @@ public class PGraphics extends PImage implements PConstants {
     imageMode(s.imageMode);
     rectMode(s.rectMode);
     ellipseMode(s.ellipseMode);
-    shapeMode(s.shapeMode);
 
     if (blendMode != s.blendMode) {
       blendMode(s.blendMode);
@@ -6474,7 +6148,6 @@ public class PGraphics extends PImage implements PConstants {
    * @see PGraphics#stroke(int, float)
    * @see PGraphics#strokeWeight(float)
    * @see PGraphics#strokeJoin(int)
-   * @see PApplet#size(int, int, String, String)
    */
   public void strokeCap(int cap) {
     strokeCap = cap;
@@ -8335,11 +8008,7 @@ public class PGraphics extends PImage implements PConstants {
    * prior to the specified method.
    */
   protected void defaultFontOrDeath(String method, float size) {
-    if (parent != null) {
-      textFont = createDefaultFont(size);
-    } else {
-      throw new RuntimeException("Use textFont() before " + method + "()");
-    }
+    textFont = createDefaultFont(size);
   }
 
 
@@ -8413,7 +8082,7 @@ public class PGraphics extends PImage implements PConstants {
     if (target == null) return false;
     int count = PApplet.min(pixels.length, target.pixels.length);
     System.arraycopy(pixels, 0, target.pixels, 0, count);
-    asyncImageSaver.saveTargetAsync(this, target, parent.sketchFile(filename));
+    asyncImageSaver.saveTargetAsync(this, target, PApplet.sketchFile(filename));
 
     return true;
   }
@@ -8428,7 +8097,7 @@ public class PGraphics extends PImage implements PConstants {
    */
   protected void awaitAsyncSaveCompletion(String filename) {
     if (asyncImageSaver != null) {
-      asyncImageSaver.awaitAsyncSaveCompletion(parent.sketchFile(filename));
+      asyncImageSaver.awaitAsyncSaveCompletion(PApplet.sketchFile(filename));
     }
   }
 
@@ -8498,32 +8167,8 @@ public class PGraphics extends PImage implements PConstants {
       }
     }
 
-
-    public void returnUnusedTarget(PImage target) { // ignore
-      targetPool.offer(target);
-    }
-
-
     public void saveTargetAsync(final PGraphics renderer, final PImage target, // ignore
                                 final File file) {
-      target.parent = renderer.parent;
-
-      // if running every frame, smooth the framerate
-      if (target.parent.frameCount - 1 == lastFrameCount && TARGET_COUNT > 1) {
-
-        // count with one less thread to reduce jitter
-        // 2 cores - 1 save thread - no wait
-        // 4 cores - 3 save threads - wait 1/2 of save time
-        // 8 cores - 7 save threads - wait 1/6 of save time
-        long avgTimePerFrame = avgNanos / (Math.max(1, TARGET_COUNT - 1));
-        long now = System.nanoTime();
-        long delay = PApplet.round((lastTime + avgTimePerFrame - now) / 1e6f);
-        try {
-          if (delay > 0) Thread.sleep(delay);
-        } catch (InterruptedException e) { }
-      }
-
-      lastFrameCount = target.parent.frameCount;
       lastTime = System.nanoTime();
 
       awaitAsyncSaveCompletion(file);

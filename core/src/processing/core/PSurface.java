@@ -34,17 +34,9 @@ public interface PSurface {
   static public final int MIN_WINDOW_WIDTH = 128;
   static public final int MIN_WINDOW_HEIGHT = 128;
 
-  // renderer that doesn't draw to the screen
-  public void initOffscreen(PApplet sketch);
-
   // considering removal in favor of separate Component classes for appropriate renderers
   // (i.e. for Java2D or a generic Image surface, but not PDF, debatable for GL or FX)
   //public Component initComponent(PApplet sketch);
-
-  //public Frame initFrame(PApplet sketch, Color backgroundColor,
-//  public void initFrame(PApplet sketch, int backgroundColor,
-//                        int deviceIndex, boolean fullScreen, boolean spanDisplays);
-  public void initFrame(PApplet sketch);
 
   /**
    * Get the native window object associated with this drawing surface.
@@ -62,38 +54,8 @@ public interface PSurface {
   // Silly, but prevents a lot of rewrite and extra methods for little benefit.
   // However, maybe prevents us from having to document the 'frame' variable?
 
-  /** Set the window (and dock, or whatever necessary) title. */
-  public void setTitle(String title);
-
-  /** Show or hide the window. */
-  public void setVisible(boolean visible);
-
-  /** Set true if we want to resize things (default is not resizable) */
-  public void setResizable(boolean resizable);
-
-  /** Dumb name, but inherited from Frame and no better ideas. */
-  public void setAlwaysOnTop(boolean always);
-
-  public void setIcon(PImage icon);
-
-  //
-
-//  public void placeWindow(int[] location);
-
-  public void placeWindow(int[] location, int[] editorLocation);
-
-  //public void placeFullScreen(boolean hideStop);
-  public void placePresent(int stopColor);
-
-  // Sketch is running from the PDE, set up messaging back to the PDE
-  public void setupExternalMessages();
-
-  //
-
   // sets displayWidth/Height inside PApplet
   //public void checkDisplaySize();
-
-  public void setLocation(int x, int y);
 
   public void setSize(int width, int height);
 
@@ -128,14 +90,6 @@ public interface PSurface {
 //  public void blit();
 
   //
-
-  public void setCursor(int kind);
-
-  public void setCursor(PImage image, int hotspotX, int hotspotY);
-
-  public void showCursor();
-
-  public void hideCursor();
 
   //
 

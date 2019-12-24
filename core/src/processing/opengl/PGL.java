@@ -667,36 +667,24 @@ public abstract class PGL {
       clearDepth(1);
       clearStencil(0);
       clear(DEPTH_BUFFER_BIT | STENCIL_BUFFER_BIT | COLOR_BUFFER_BIT);
-      if (0 < sketch.frameCount) {
-        clearDepth = true;
-        clearStencil = true;
-      }
+      clearDepth = true;
+      clearStencil = true;
     } else if (depth) {
       clearDepth(1);
       clear(DEPTH_BUFFER_BIT | COLOR_BUFFER_BIT);
-      if (0 < sketch.frameCount) {
-        clearDepth = true;
-      }
+      clearDepth = true;
     } else if (stencil) {
       clearStencil(0);
       clear(STENCIL_BUFFER_BIT | COLOR_BUFFER_BIT);
-      if (0 < sketch.frameCount) {
-        clearStencil = true;
-      }
+      clearStencil = true;
     } else {
       clear(PGL.COLOR_BUFFER_BIT);
     }
-    if (0 < sketch.frameCount) {
-      clearColor = true;
-    }
+    clearColor = true;
   }
 
 
   protected void beginRender() {
-    if (sketch == null) {
-      sketch = graphics.parent;
-    }
-
     pgeomCount = geomCount;
     geomCount = 0;
 
@@ -709,7 +697,7 @@ public abstract class PGL {
     pclearStencil = clearStencil;
     clearStencil = false;
 
-    if (SINGLE_BUFFERED && sketch.frameCount == 1) {
+    if (SINGLE_BUFFERED) {
       restoreFirstFrame();
     }
 
@@ -736,30 +724,13 @@ public abstract class PGL {
         bindFramebufferImpl(FRAMEBUFFER, glMultiFbo.get(0));
       }
 
-      if (sketch.frameCount == 0) {
-        // No need to draw back color buffer because we are in the first frame.
-        int argb = graphics.backgroundColor;
-        float ba = ((argb >> 24) & 0xff) / 255.0f;
-        float br = ((argb >> 16) & 0xff) / 255.0f;
-        float bg = ((argb >> 8) & 0xff) / 255.0f;
-        float bb = ((argb) & 0xff) / 255.0f;
-        clearColor(br, bg, bb, ba);
-        clear(COLOR_BUFFER_BIT);
-      } else if (!pclearColor || !sketch.isLooping()) {
-        // Render previous back texture (now is the front) as background,
-        // because no background() is being used ("incremental drawing")
-        int x = 0;
-        int y = 0;
-        if (presentMode) {
-          x = (int)presentX;
-          y = (int)presentY;
-        }
-        float scale = getPixelScale();
-        drawTexture(TEXTURE_2D, glColorTex.get(frontTex), fboWidth, fboHeight,
-                    x, y, graphics.width, graphics.height,
-                    0, 0, (int)(scale * graphics.width), (int)(scale * graphics.height),
-                    0, 0, graphics.width, graphics.height);
-      }
+      int argb = graphics.backgroundColor;
+      float ba = ((argb >> 24) & 0xff) / 255.0f;
+      float br = ((argb >> 16) & 0xff) / 255.0f;
+      float bg = ((argb >> 8) & 0xff) / 255.0f;
+      float bb = ((argb) & 0xff) / 255.0f;
+      clearColor(br, bg, bb, ba);
+      clear(COLOR_BUFFER_BIT);
     }
   }
 
@@ -848,11 +819,11 @@ public abstract class PGL {
         fboLayerDisableReq = false;
       }
     } else {
-      if (SINGLE_BUFFERED && sketch.frameCount == 0) {
+      if (SINGLE_BUFFERED) {
         saveFirstFrame();
       }
 
-      if (!clearColor && 0 < sketch.frameCount || !sketch.isLooping()) {
+      if (!clearColor) {
         enableFBOLayer();
         if (SINGLE_BUFFERED) {
           createFBOLayer();

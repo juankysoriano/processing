@@ -600,16 +600,6 @@ public class PGraphicsOpenGL extends PGraphics {
     initialized = false;
   }
 
-
-  @Override
-  public void setParent(PApplet parent) {
-    super.setParent(parent);
-    if (pgl != null) {
-      pgl.sketch = parent;
-    }
-  }
-
-
   @Override
   public void setPrimary(boolean primary) {
     super.setPrimary(primary);
@@ -696,8 +686,6 @@ public class PGraphicsOpenGL extends PGraphics {
     pixelWidth = (int)(width * f);
     pixelHeight = (int)(height * f);
     if (primaryGraphics) {
-      parent.pixelWidth = pixelWidth;
-      parent.pixelHeight = pixelHeight;
     }
   }
 
@@ -789,7 +777,7 @@ public class PGraphicsOpenGL extends PGraphics {
       updatePixelSize();
 
       // get the whole async package
-      asyncPixelReader.readAndSaveAsync(parent.sketchFile(filename));
+      asyncPixelReader.readAndSaveAsync(PApplet.sketchFile(filename));
 
       if (needEndDraw) endDraw();
     } else {
@@ -802,7 +790,7 @@ public class PGraphicsOpenGL extends PGraphics {
       if (target == null) return false;
       int count = PApplet.min(pixels.length, target.pixels.length);
       System.arraycopy(pixels, 0, target.pixels, 0, count);
-      asyncImageSaver.saveTargetAsync(this, target, parent.sketchFile(filename));
+      asyncImageSaver.saveTargetAsync(this, target, PApplet.sketchFile(filename));
     }
 
     return true;
@@ -1479,11 +1467,7 @@ public class PGraphicsOpenGL extends PGraphics {
     // Flushing any remaining geometry.
     flush();
 
-    if (primaryGraphics) {
-      endOnscreenDraw();
-    } else {
-      endOffscreenDraw();
-    }
+    endOffscreenDraw();
 
     if (primaryGraphics) {
       setCurrentPG(null);
@@ -1497,11 +1481,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   protected PGraphicsOpenGL getPrimaryPG() {
-    if (primaryGraphics) {
-      return this;
-    } else {
-      return (PGraphicsOpenGL)parent.g;
-    }
+   return this;
   }
 
   protected void setCurrentPG(PGraphicsOpenGL pg) {
@@ -1517,11 +1497,7 @@ public class PGraphicsOpenGL extends PGraphics {
   }
 
   protected PGL getPrimaryPGL() {
-    if (primaryGraphics) {
-      return pgl;
-    } else {
-      return ((PGraphicsOpenGL)parent.g).pgl;
-    }
+    return pgl;
   }
 
 
@@ -1916,28 +1892,6 @@ public class PGraphicsOpenGL extends PGraphics {
   //////////////////////////////////////////////////////////////
 
   // CREATE SHAPE
-
-
-  @Override
-  protected PShape createShapeFamily(int type) {
-    PShape shape = new PShapeOpenGL(this, type);
-    if (is3D()) {
-      shape.set3D(true);
-    }
-    return shape;
-  }
-
-
-  @Override
-  protected PShape createShapePrimitive(int kind, float... p) {
-    PShape shape = new PShapeOpenGL(this, kind, p);
-    if (is3D()) {
-      shape.set3D(true);
-    }
-    return shape;
-  }
-
-
 
   //////////////////////////////////////////////////////////////
 
@@ -3341,87 +3295,9 @@ public class PGraphicsOpenGL extends PGraphics {
 
   // public void shapeMode(int mode)
 
-
-  // TODO unapproved
-  @Override
-  protected void shape(PShape shape, float x, float y, float z) {
-    if (shape.isVisible()) { // don't do expensive matrix ops if invisible
-      flush();
-
-      pushMatrix();
-
-      if (shapeMode == CENTER) {
-        translate(x - shape.getWidth() / 2, y - shape.getHeight() / 2,
-                  z - shape.getDepth() / 2);
-
-      } else if ((shapeMode == CORNER) || (shapeMode == CORNERS)) {
-        translate(x, y, z);
-      }
-      shape.draw(this);
-
-      popMatrix();
-    }
-  }
-
-
-  // TODO unapproved
-  @Override
-  protected void shape(PShape shape, float x, float y, float z,
-                       float c, float d, float e) {
-    if (shape.isVisible()) { // don't do expensive matrix ops if invisible
-      flush();
-
-      pushMatrix();
-
-      if (shapeMode == CENTER) {
-        // x, y and z are center, c, d and e refer to a diameter
-        translate(x - c / 2f, y - d / 2f, z - e / 2f);
-        scale(c / shape.getWidth(),
-              d / shape.getHeight(),
-              e / shape.getDepth());
-
-      } else if (shapeMode == CORNER) {
-        translate(x, y, z);
-        scale(c / shape.getWidth(),
-              d / shape.getHeight(),
-              e / shape.getDepth());
-
-      } else if (shapeMode == CORNERS) {
-        // c, d, e are x2/y2/z2, make them into width/height/depth
-        c -= x;
-        d -= y;
-        e -= z;
-        // then same as above
-        translate(x, y, z);
-        scale(c / shape.getWidth(),
-              d / shape.getHeight(),
-              e / shape.getDepth());
-      }
-      shape.draw(this);
-
-      popMatrix();
-    }
-  }
-
-
   //////////////////////////////////////////////////////////////
 
   // SHAPE I/O
-
-
-  @Override
-  public PShape loadShape(String filename) {
-    String ext = PApplet.getExtension(filename);
-    if (PGraphics2D.isSupportedExtension(ext)) {
-      return PGraphics2D.loadShapeImpl(this, filename, ext);
-    } if (PGraphics3D.isSupportedExtension(ext)) {
-      return PGraphics3D.loadShapeImpl(this, filename, ext);
-    } else {
-      PGraphics.showWarning(UNSUPPORTED_SHAPE_FORMAT_ERROR);
-      return null;
-    }
-  }
-
 
   //////////////////////////////////////////////////////////////
 
@@ -5612,7 +5488,7 @@ public class PGraphicsOpenGL extends PGraphics {
   protected void awaitAsyncSaveCompletion(String filename) {
     if (asyncPixelReader != null) {
       ongoingPixelTransfersIterable.addAll(ongoingPixelTransfers);
-      File file = parent.sketchFile(filename);
+      File file = PApplet.sketchFile(filename);
       for (AsyncPixelReader pixelReader : ongoingPixelTransfersIterable) {
         pixelReader.awaitTransferCompletion(file);
       }
@@ -6032,7 +5908,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
     PGraphicsOpenGL ppg = getPrimaryPG();
     if (ppg.maskShader == null) {
-      ppg.maskShader = new PShader(parent, defTextureShaderVertURL,
+      ppg.maskShader = new PShader(this, defTextureShaderVertURL,
                                            maskShaderFragURL);
     }
     ppg.maskShader.set("mask", alpha);
@@ -6484,9 +6360,6 @@ public class PGraphicsOpenGL extends PGraphics {
       // Cannot add textures of size 0
       return null;
     }
-    if (img.parent == null) {
-      img.parent = parent;
-    }
     Texture tex = new Texture(this, img.pixelWidth, img.pixelHeight, params);
     setCache(img, tex);
     return tex;
@@ -6519,7 +6392,6 @@ public class PGraphicsOpenGL extends PGraphics {
     // We don't use the PImage(int width, int height, int mode) constructor to
     // avoid initializing the pixels array.
     PImage img = new PImage();
-    img.parent = parent;
     img.width = img.pixelWidth = tex.width;
     img.height = img.pixelHeight = tex.height;
     img.format = ARGB;
@@ -6618,12 +6490,6 @@ public class PGraphicsOpenGL extends PGraphics {
       ptexture = pgl.wrapFrontTexture(ptexture);
     }
   }
-
-
-  protected void endOnscreenDraw() {
-    pgl.endRender(parent.sketchWindowColor());
-  }
-
 
   protected void initOffscreen() {
     // Getting the context and capabilities from the main renderer.
@@ -6949,9 +6815,9 @@ public class PGraphicsOpenGL extends PGraphics {
       return null;
     }
 
-    int type = PShader.getShaderType(parent.loadStrings(fragFilename),
+    int type = PShader.getShaderType(PApplet.loadStrings(fragFilename),
                                      PShader.POLY);
-    PShader shader = new PShader(parent);
+    PShader shader = new PShader(this);
     shader.setType(type);
     shader.setFragmentShader(fragFilename);
     if (type == PShader.POINT) {
@@ -6988,7 +6854,7 @@ public class PGraphicsOpenGL extends PGraphics {
     } else if (vertFilename == null || vertFilename.equals("")) {
       PGraphics.showWarning(MISSING_VERTEX_SHADER);
     } else {
-      shader = new PShader(parent, vertFilename, fragFilename);
+      shader = new PShader(this, vertFilename, fragFilename);
     }
     return shader;
   }
@@ -7055,7 +6921,7 @@ public class PGraphicsOpenGL extends PGraphics {
           if (ppg.defTexlightShader == null) {
             String[] vertSource = pgl.loadVertexShader(defTexlightShaderVertURL);
             String[] fragSource = pgl.loadFragmentShader(defTexlightShaderFragURL);
-            ppg.defTexlightShader = new PShader(parent, vertSource, fragSource);
+            ppg.defTexlightShader = new PShader(this, vertSource, fragSource);
           }
           shader = ppg.defTexlightShader;
         } else {
@@ -7066,7 +6932,7 @@ public class PGraphicsOpenGL extends PGraphics {
           if (ppg.defLightShader == null) {
             String[] vertSource = pgl.loadVertexShader(defLightShaderVertURL);
             String[] fragSource = pgl.loadFragmentShader(defLightShaderFragURL);
-            ppg.defLightShader = new PShader(parent, vertSource, fragSource);
+            ppg.defLightShader = new PShader(this, vertSource, fragSource);
           }
           shader = ppg.defLightShader;
         } else {
@@ -7084,7 +6950,7 @@ public class PGraphicsOpenGL extends PGraphics {
           if (ppg.defTextureShader == null) {
             String[] vertSource = pgl.loadVertexShader(defTextureShaderVertURL);
             String[] fragSource = pgl.loadFragmentShader(defTextureShaderFragURL);
-            ppg.defTextureShader = new PShader(parent, vertSource, fragSource);
+            ppg.defTextureShader = new PShader(this, vertSource, fragSource);
           }
           shader = ppg.defTextureShader;
         } else {
@@ -7095,7 +6961,7 @@ public class PGraphicsOpenGL extends PGraphics {
           if (ppg.defColorShader == null) {
             String[] vertSource = pgl.loadVertexShader(defColorShaderVertURL);
             String[] fragSource = pgl.loadFragmentShader(defColorShaderFragURL);
-            ppg.defColorShader = new PShader(parent, vertSource, fragSource);
+            ppg.defColorShader = new PShader(this, vertSource, fragSource);
           }
           shader = ppg.defColorShader;
         } else {
@@ -7119,7 +6985,7 @@ public class PGraphicsOpenGL extends PGraphics {
       if (ppg.defLineShader == null) {
         String[] vertSource = pgl.loadVertexShader(defLineShaderVertURL);
         String[] fragSource = pgl.loadFragmentShader(defLineShaderFragURL);
-        ppg.defLineShader = new PShader(parent, vertSource, fragSource);
+        ppg.defLineShader = new PShader(this, vertSource, fragSource);
       }
       shader = ppg.defLineShader;
     } else {
@@ -7139,7 +7005,7 @@ public class PGraphicsOpenGL extends PGraphics {
       if (ppg.defPointShader == null) {
         String[] vertSource = pgl.loadVertexShader(defPointShaderVertURL);
         String[] fragSource = pgl.loadFragmentShader(defPointShaderFragURL);
-        ppg.defPointShader = new PShader(parent, vertSource, fragSource);
+        ppg.defPointShader = new PShader(this, vertSource, fragSource);
       }
       shader = ppg.defPointShader;
     } else {

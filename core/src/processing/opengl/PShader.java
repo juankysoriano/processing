@@ -76,7 +76,6 @@ public class PShader implements PConstants {
   static protected String quadShaderAttrRegexp =
     "#define *PROCESSING_QUADS_SHADER";
 
-  protected PApplet parent;
   // The main renderer associated to the parent PApplet.
   //protected PGraphicsOpenGL pgMain;
   // We need a reference to the renderer since a shader might
@@ -164,7 +163,6 @@ public class PShader implements PConstants {
   protected int shininessLoc;
 
   public PShader() {
-    parent = null;
     pgl = null;
     context = -1;
 
@@ -186,10 +184,9 @@ public class PShader implements PConstants {
   }
 
 
-  public PShader(PApplet parent) {
+  public PShader(PGraphics graphics) {
     this();
-    this.parent = parent;
-    primaryPG = (PGraphicsOpenGL)parent.g;
+    primaryPG = (PGraphicsOpenGL)graphics;
     pgl = primaryPG.pgl;
     context = pgl.createEmptyContext();
   }
@@ -199,13 +196,11 @@ public class PShader implements PConstants {
    * Creates a shader program using the specified vertex and fragment
    * shaders.
    *
-   * @param parent the parent program
    * @param vertFilename name of the vertex shader
    * @param fragFilename name of the fragment shader
    */
-  public PShader(PApplet parent, String vertFilename, String fragFilename) {
-    this.parent = parent;
-    primaryPG = (PGraphicsOpenGL)parent.g;
+  public PShader(PGraphics graphics, String vertFilename, String fragFilename) {
+    primaryPG = (PGraphicsOpenGL)graphics;
     pgl = primaryPG.pgl;
 
     this.vertexURL = null;
@@ -242,9 +237,8 @@ public class PShader implements PConstants {
    * @param vertURL network location of the vertex shader
    * @param fragURL network location of the fragment shader
    */
-  public PShader(PApplet parent, URL vertURL, URL fragURL) {
-    this.parent = parent;
-    primaryPG = (PGraphicsOpenGL)parent.g;
+  public PShader(PGraphics graphics, URL vertURL, URL fragURL) {
+    primaryPG = (PGraphicsOpenGL)graphics;
     pgl = primaryPG.pgl;
 
     this.vertexURL = vertURL;
@@ -276,9 +270,8 @@ public class PShader implements PConstants {
     }
   }
 
-  public PShader(PApplet parent, String[] vertSource, String[] fragSource) {
-    this.parent = parent;
-    primaryPG = (PGraphicsOpenGL)parent.g;
+  public PShader(PGraphics graphics, String[] vertSource, String[] fragSource) {
+    primaryPG = (PGraphicsOpenGL)graphics;
     pgl = primaryPG.pgl;
 
     this.vertexURL = null;
@@ -968,9 +961,6 @@ public class PShader implements PConstants {
   }
 
 
-  /**
-   * @param shaderSource a string containing the shader's code
-   */
   protected boolean compileVertexShader() {
     pgl.shaderSource(glVertex, PApplet.join(vertexShaderSource, "\n"));
     pgl.compileShader(glVertex);
@@ -987,9 +977,6 @@ public class PShader implements PConstants {
   }
 
 
-  /**
-   * @param shaderSource a string containing the shader's code
-   */
   protected boolean compileFragmentShader() {
     pgl.shaderSource(glFragment, PApplet.join(fragmentShaderSource, "\n"));
     pgl.compileShader(glFragment);

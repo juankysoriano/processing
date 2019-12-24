@@ -24,11 +24,7 @@
 
 package processing.opengl;
 
-import processing.core.PGraphics;
 import processing.core.PMatrix3D;
-import processing.core.PShape;
-import processing.core.PShapeSVG;
-
 
 public class PGraphics2D extends PGraphicsOpenGL {
 
@@ -183,73 +179,9 @@ public class PGraphics2D extends PGraphicsOpenGL {
 
   // SHAPE
 
-
-  @Override
-  public void shape(PShape shape) {
-    if (shape.is2D()) {
-      super.shape(shape);
-    } else {
-      showWarning("The shape object is not 2D, cannot be displayed with " +
-                  "this renderer");
-    }
-  }
-
-
-  @Override
-  public void shape(PShape shape, float x, float y) {
-    if (shape.is2D()) {
-      super.shape(shape, x, y);
-    } else {
-      showWarning("The shape object is not 2D, cannot be displayed with " +
-                  "this renderer");
-    }
-  }
-
-
-  @Override
-  public void shape(PShape shape, float a, float b, float c, float d) {
-    if (shape.is2D()) {
-      super.shape(shape, a, b, c, d);
-    } else {
-      showWarning("The shape object is not 2D, cannot be displayed with " +
-                  "this renderer");
-    }
-  }
-
-
-  @Override
-  public void shape(PShape shape, float x, float y, float z) {
-    showDepthWarningXYZ("shape");
-  }
-
-
-  @Override
-  public void shape(PShape shape, float x, float y, float z,
-                    float c, float d, float e) {
-    showDepthWarningXYZ("shape");
-  }
-
-
-
   //////////////////////////////////////////////////////////////
 
   // SHAPE I/O
-
-
-  static protected boolean isSupportedExtension(String extension) {
-    return extension.equals("svg") || extension.equals("svgz");
-  }
-
-
-  static protected PShape loadShapeImpl(PGraphics pg,
-                                        String filename, String extension) {
-    if (extension.equals("svg") || extension.equals("svgz")) {
-      PShapeSVG svg = new PShapeSVG(pg.parent.loadXML(filename));
-      return PShapeOpenGL.createShape((PGraphicsOpenGL) pg, svg);
-    }
-    return null;
-  }
-
 
   //////////////////////////////////////////////////////////////
 
