@@ -1414,18 +1414,9 @@ public class PGraphicsOpenGL extends PGraphics {
       getPrimaryPG().setCurrentPG(this);
     }
 
-    if (!pgl.threadIsCurrent()) {
-      PGraphics.showWarning(GL_THREAD_NOT_CURRENT);
-      return;
-    }
-
     // This has to go after the surface initialization, otherwise offscreen
     // surfaces will have a null gl object.
     report("top beginDraw()");
-
-    if (!checkGLThread()) {
-      return;
-    }
 
     if (drawing) {
       return;
@@ -6297,10 +6288,6 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   protected Object initCache(PImage img) {
-    if (!checkGLThread()) {
-      return null;
-    }
-
     Texture tex = (Texture)getCache(img);
     if (tex == null || tex.contextIsOutdated()) {
       tex = addTexture(img);
@@ -6428,16 +6415,6 @@ public class PGraphicsOpenGL extends PGraphics {
     }
 
 
-  }
-
-
-  protected boolean checkGLThread() {
-    if (pgl.threadIsCurrent()) {
-      return true;
-    } else {
-      PGraphics.showWarning(OPENGL_THREAD_ERROR);
-      return false;
-    }
   }
 
 
@@ -7167,7 +7144,7 @@ public class PGraphicsOpenGL extends PGraphics {
     void deleteBuffer(PGL pgl) {
       if (buf.glId != 0) {
         intBuffer.put(0, buf.glId);
-        if (pgl.threadIsCurrent()) pgl.deleteBuffers(1, intBuffer);
+        //if (pgl.threadIsCurrent()) pgl.deleteBuffers(1, intBuffer);
       }
     }
 

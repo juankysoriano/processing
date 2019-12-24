@@ -56,9 +56,6 @@ public abstract class PGL {
   protected PGraphicsOpenGL graphics;
   protected PApplet sketch;
 
-  /** OpenGL thread */
-  protected Thread glThread;
-
   /** ID of the GL context associated to the surface **/
   protected int glContext;
 
@@ -847,17 +844,6 @@ public abstract class PGL {
 
   protected abstract void swapBuffers();
 
-
-  public boolean threadIsCurrent()  {
-    return Thread.currentThread() == glThread;
-  }
-
-
-  public void setThread(Thread thread) {
-    glThread = thread;
-  }
-
-
   protected void beginGL() { }
 
 
@@ -1005,7 +991,7 @@ public abstract class PGL {
   }
 
   protected void destroyFBOLayer() {
-    if (threadIsCurrent() && fboLayerCreated) {
+    if (fboLayerCreated) {
       deleteFramebuffers(1, glColorFbo);
       deleteTextures(2, glColorTex);
       deleteRenderbuffers(1, glDepthStencil);

@@ -4,6 +4,7 @@ import processing.opengl.PGraphics2D
 
 fun main(args: Array<String> ) {
     val graphics = PGraphics2D().apply {
+        setPrimary(false)
         setSize(200, 200)
     }
     graphics.beginDraw()

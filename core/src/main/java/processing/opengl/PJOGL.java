@@ -241,7 +241,6 @@ public class PJOGL extends PGL {
     this.drawable = pjogl.drawable;
     this.context = pjogl.context;
     this.glContext = pjogl.glContext;
-    setThread(pjogl.glThread);
 
     this.gl = pjogl.gl;
     this.gl2 = pjogl.gl2;
@@ -254,7 +253,6 @@ public class PJOGL extends PGL {
   public void getGL(GLAutoDrawable glDrawable) {
     context = glDrawable.getContext();
     glContext = context.hashCode();
-    setThread(Thread.currentThread());
 
     gl = context.getGL();
     gl2 = gl.getGL2ES2();

@@ -77,3 +77,4 @@ fabric.properties
 
 .gradle
 /build/
+/core/build
