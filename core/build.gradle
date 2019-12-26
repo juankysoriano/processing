@@ -20,5 +20,6 @@ repositories {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs-linux-amd64', include: ['*.jar'])
+    //compile fileTree(dir: 'libs-linux-amd64', include: ['*.jar'])
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
 }
