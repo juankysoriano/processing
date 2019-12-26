@@ -78,3 +78,9 @@ fabric.properties
 .gradle
 /build/
 /core/build
+.gradle
+.build
+.gradle/5.2.1
+.gradle/5.4.1
+.gradle/buildOutputCleanup
+.gradle/vcs-1
