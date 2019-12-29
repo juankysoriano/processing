@@ -99,15 +99,6 @@ public class PSurfaceNone implements PSurface {
   @Override
   public void placeWindow(int[] location, int[] editorLocation) { }
 
-
-  @Override
-  public void placePresent(int stopColor) { }
-
-
-  @Override
-  public void setupExternalMessages() { }
-
-
   @Override
   public void setAlwaysOnTop(boolean always) { }
 

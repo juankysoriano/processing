@@ -1470,7 +1470,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   public void endDraw() {
-    report("top endDraw()");
+    //report("top endDraw()");
 
     if (!drawing) {
       return;
@@ -1492,7 +1492,7 @@ public class PGraphicsOpenGL extends PGraphics {
     }
     drawing = false;
 
-    report("bot endDraw()");
+    //report("bot endDraw()");
   }
 
 

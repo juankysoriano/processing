@@ -31,8 +31,8 @@ public interface PSurface {
    * set of limitations. And for all I know, Linux probably allows window
    * sizes to be negative numbers.
    */
-  static public final int MIN_WINDOW_WIDTH = 128;
-  static public final int MIN_WINDOW_HEIGHT = 128;
+  static public final int MIN_WINDOW_WIDTH = 0;
+  static public final int MIN_WINDOW_HEIGHT = 0;
 
   // renderer that doesn't draw to the screen
   public void initOffscreen(PApplet sketch);
@@ -81,12 +81,6 @@ public interface PSurface {
 //  public void placeWindow(int[] location);
 
   public void placeWindow(int[] location, int[] editorLocation);
-
-  //public void placeFullScreen(boolean hideStop);
-  public void placePresent(int stopColor);
-
-  // Sketch is running from the PDE, set up messaging back to the PDE
-  public void setupExternalMessages();
 
   //
 

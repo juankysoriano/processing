@@ -63,7 +63,7 @@ import processing.core.PSurface;
 
 public class PJOGL extends PGL {
   // OpenGL profile to use (2, 3 or 4)
-  public static int profile = 2;
+  public static int profile = 4;
 
   // User-provided icons to override defaults
   protected static String[] icons = null;

@@ -34,7 +34,6 @@ import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.Insets;
-import java.awt.Label;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -711,47 +710,6 @@ public class PSurfaceAWT extends PSurfaceNone {
   }
 
 
-  //public void placeFullScreen(boolean hideStop) {
-  @Override
-  public void placePresent(int stopColor) {
-    setFullFrame();
-
-    // After the pack(), the screen bounds are gonna be 0s
-//    frame.setBounds(screenRect);  // already called in setFullFrame()
-    canvas.setBounds((screenRect.width - sketchWidth) / 2,
-                     (screenRect.height - sketchHeight) / 2,
-                     sketchWidth, sketchHeight);
-
-//    if (PApplet.platform == PConstants.MACOSX) {
-//      macosxFullScreenEnable(frame);
-//      macosxFullScreenToggle(frame);
-//    }
-
-    if (stopColor != 0) {
-      Label label = new Label("stop");
-      label.setForeground(new Color(stopColor, false));
-      label.addMouseListener(new MouseAdapter() {
-        @Override
-        public void mousePressed(java.awt.event.MouseEvent e) {
-          sketch.exit();
-        }
-      });
-      frame.add(label);
-
-      Dimension labelSize = label.getPreferredSize();
-      // sometimes shows up truncated on mac
-      //System.out.println("label width is " + labelSize.width);
-      labelSize = new Dimension(100, labelSize.height);
-      label.setSize(labelSize);
-      label.setLocation(20, screenRect.height - labelSize.height - 20);
-    }
-
-//    if (sketch.getGraphics().displayable()) {
-//      setVisible(true);
-//    }
-  }
-
-
   /*
   @Override
   public void placeWindow(int[] location) {
@@ -1085,26 +1043,6 @@ public class PSurfaceAWT extends PSurfaceNone {
     }
   }
   */
-
-
-  /**
-   * Set this sketch to communicate its state back to the PDE.
-   * <p/>
-   * This uses the stderr stream to write positions of the window
-   * (so that it will be saved by the PDE for the next run) and
-   * notify on quit. See more notes in the Worker class.
-   */
-  @Override
-  public void setupExternalMessages() {
-    frame.addComponentListener(new ComponentAdapter() {
-      @Override
-      public void componentMoved(ComponentEvent e) {
-        Point where = ((Frame) e.getSource()).getLocation();
-        sketch.frameMoved(where.x, where.y);
-      }
-    });
-  }
-
 
   /**
    * Set up a listener that will fire proper component resize events
