@@ -6,7 +6,7 @@ fun main(args: Array<String>) {
     Processing.run(
         700,
         700,
-        PApplet.P3D
+        PApplet.JAVA2D
     ) { graphics ->
         graphics.beginDraw()
         graphics.background(0)
@@ -25,7 +25,7 @@ abstract class Processing {
         fun run(
             width: Int,
             height: Int,
-            renderer: String = PApplet.P2D,
+            renderer: String = PApplet.JAVA2D,
             block: (PGraphics) -> Unit
         ) {
             object : PApplet() {
@@ -36,7 +36,6 @@ abstract class Processing {
                     }.apply {
                         println("Settings: $this")
                     }
-
                 }
 
                 override fun draw() {
@@ -45,7 +44,6 @@ abstract class Processing {
                     }.apply {
                         println("Draw: $this")
                     }
-                    exit()
                 }
             }.apply {
                 measureTimeMillis {

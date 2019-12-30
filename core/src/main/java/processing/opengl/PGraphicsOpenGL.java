@@ -500,10 +500,6 @@ public class PGraphicsOpenGL extends PGraphics {
 
   // Error strings:
 
-  static final String OPENGL_THREAD_ERROR =
-    "Cannot run the OpenGL renderer outside the main thread, change your code" +
-    "\nso the drawing calls are all inside the main thread, " +
-    "\nor use the default renderer instead.";
   static final String BLEND_DRIVER_ERROR =
     "blendMode(%1$s) is not supported by this hardware (or driver)";
   static final String BLEND_RENDERER_ERROR =
@@ -553,12 +549,6 @@ public class PGraphicsOpenGL extends PGraphics {
     "to render this geometry properly, using default shader instead.";
   static final String TESSELLATION_ERROR =
     "Tessellation Error: %1$s";
-  static final String GL_THREAD_NOT_CURRENT =
-    "You are trying to draw outside OpenGL's animation thread.\n" +
-    "Place all drawing commands in the draw() function, or inside\n" +
-    "your own functions as long as they are called from draw(),\n" +
-    "but not in event handling functions such as keyPressed()\n" +
-    "or mousePressed().";
 
   //////////////////////////////////////////////////////////////
 
@@ -1426,19 +1416,8 @@ public class PGraphicsOpenGL extends PGraphics {
       getPrimaryPG().setCurrentPG(this);
     }
 
-    if (!pgl.threadIsCurrent()) {
-      PGraphics.showWarning(GL_THREAD_NOT_CURRENT);
-      return;
-    }
-
     // This has to go after the surface initialization, otherwise offscreen
     // surfaces will have a null gl object.
-    report("top beginDraw()");
-
-    if (!checkGLThread()) {
-      return;
-    }
-
     if (drawing) {
       return;
     }
@@ -6421,10 +6400,6 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   protected Object initCache(PImage img) {
-    if (!checkGLThread()) {
-      return null;
-    }
-
     Texture tex = (Texture)getCache(img);
     if (tex == null || tex.contextIsOutdated()) {
       tex = addTexture(img);
@@ -6557,17 +6532,6 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   }
-
-
-  protected boolean checkGLThread() {
-    if (pgl.threadIsCurrent()) {
-      return true;
-    } else {
-      PGraphics.showWarning(OPENGL_THREAD_ERROR);
-      return false;
-    }
-  }
-
 
   //////////////////////////////////////////////////////////////
 
@@ -7301,7 +7265,7 @@ public class PGraphicsOpenGL extends PGraphics {
     void deleteBuffer(PGL pgl) {
       if (buf.glId != 0) {
         intBuffer.put(0, buf.glId);
-        if (pgl.threadIsCurrent()) pgl.deleteBuffers(1, intBuffer);
+        pgl.deleteBuffers(1, intBuffer);
       }
     }
 

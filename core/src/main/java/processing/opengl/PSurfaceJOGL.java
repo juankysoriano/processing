@@ -127,7 +127,6 @@ public class PSurfaceJOGL implements PSurface {
         initGL();
         initWindow();
         initListeners();
-        sketch.handleDraw();
     }
 
     public Object getNative() {
