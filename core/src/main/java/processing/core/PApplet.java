@@ -921,8 +921,6 @@ public class PApplet implements PConstants {
 
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-    boolean insideSettings;
-
     String renderer = JAVA2D;
     //  int quality = 2;
     int smooth = 1;  // default smoothing (whatever that means for the renderer)
@@ -945,33 +943,8 @@ public class PApplet implements PConstants {
     // https://github.com/processing/processing/issues/2297
     int windowColor = 0xffDDDDDD;
 
-    /**
-     * @param method "size" or "fullScreen"
-     * @param args   parameters passed to the function so we can show the user
-     * @return true if safely inside the settings() method
-     */
-    boolean insideSettings(String method, Object... args) {
-        if (insideSettings) {
-            return true;
-        }
-        final String url = "https://processing.org/reference/" + method + "_.html";
-        if (!external) {  // post a warning for users of Eclipse and other IDEs
-            StringList argList = new StringList(args);
-            System.err.println("When not using the PDE, " + method + "() can only be used inside settings().");
-            System.err.println("Remove the " + method + "() method from setup(), and add the following:");
-            System.err.println("public void settings() {");
-            System.err.println("  " + method + "(" + argList.join(", ") + ");");
-            System.err.println("}");
-        }
-        throw new IllegalStateException(method + "() cannot be used here, see " + url);
-    }
-
     void handleSettings() {
-        insideSettings = true;
-
         settings();
-
-        insideSettings = false;
     }
 
     /**
@@ -1157,23 +1130,16 @@ public class PApplet implements PConstants {
     public void pixelDensity(int density) {
         //println(density + " " + this.pixelDensity);
         if (density != this.pixelDensity) {
-            if (insideSettings("pixelDensity", density)) {
-                if (density != 1 && density != 2) {
-                    throw new RuntimeException("pixelDensity() can only be 1 or 2");
-                }
-                if (!FX2D.equals(renderer) && density == 2 && displayDensity() == 1) {
-                    // FX has its own check in PSurfaceFX
-                    // Don't throw exception because the sketch should still work
-                    System.err.println("pixelDensity(2) is not available for this display");
-                    this.pixelDensity = 1;
-                } else {
-                    this.pixelDensity = density;
-                }
+            if (density != 1 && density != 2) {
+                throw new RuntimeException("pixelDensity() can only be 1 or 2");
+            }
+            if (!FX2D.equals(renderer) && density == 2 && displayDensity() == 1) {
+                // FX has its own check in PSurfaceFX
+                // Don't throw exception because the sketch should still work
+                System.err.println("pixelDensity(2) is not available for this display");
+                this.pixelDensity = 1;
             } else {
-                System.err.println("not inside settings");
-                // this should only be reachable when not running in the PDE,
-                // so saying it's a settings()--not just setup()--issue should be ok
-                throw new RuntimeException("pixelDensity() can only be used inside settings()");
+                this.pixelDensity = density;
             }
         }
     }
@@ -1203,24 +1169,14 @@ public class PApplet implements PConstants {
      * @webref environment
      */
     public void smooth(int level) {
-        if (insideSettings) {
-            this.smooth = level;
-
-        } else if (this.smooth != level) {
-            smoothWarning("smooth");
-        }
+        this.smooth = level;
     }
 
     /**
      * @webref environment
      */
     public void noSmooth() {
-        if (insideSettings) {
-            this.smooth = 0;
-
-        } else if (this.smooth != 0) {
-            smoothWarning("noSmooth");
-        }
+        this.smooth = 0;
     }
 
     private void smoothWarning(String method) {
@@ -1786,26 +1742,6 @@ public class PApplet implements PConstants {
   */
 
     /**
-     * Create a full-screen sketch using the default renderer.
-     */
-    public void fullScreen() {
-        if (!fullScreen) {
-            if (insideSettings("fullScreen")) {
-                this.fullScreen = true;
-            }
-        }
-    }
-
-    public void fullScreen(int display) {
-        if (!fullScreen || display != this.display) {
-            if (insideSettings("fullScreen", display)) {
-                this.fullScreen = true;
-                this.display = display;
-            }
-        }
-    }
-
-    /**
      * ( begin auto-generated from fullScreen.xml )
      * <p>
      * Description to come...
@@ -1822,10 +1758,8 @@ public class PApplet implements PConstants {
     public void fullScreen(String renderer) {
         if (!fullScreen ||
                 !renderer.equals(this.renderer)) {
-            if (insideSettings("fullScreen", renderer)) {
-                this.fullScreen = true;
-                this.renderer = renderer;
-            }
+            this.fullScreen = true;
+            this.renderer = renderer;
         }
     }
 
@@ -1837,11 +1771,9 @@ public class PApplet implements PConstants {
         if (!fullScreen ||
                 !renderer.equals(this.renderer) ||
                 display != this.display) {
-            if (insideSettings("fullScreen", renderer, display)) {
-                this.fullScreen = true;
-                this.renderer = renderer;
-                this.display = display;
-            }
+            this.fullScreen = true;
+            this.renderer = renderer;
+            this.display = display;
         }
     }
 
@@ -1928,10 +1860,8 @@ public class PApplet implements PConstants {
         // action if things have changed.
         if (width != this.width ||
                 height != this.height) {
-            if (insideSettings("size", width, height)) {
-                this.width = width;
-                this.height = height;
-            }
+            this.width = width;
+            this.height = height;
         }
     }
 
@@ -1940,11 +1870,9 @@ public class PApplet implements PConstants {
                 height != this.height ||
                 !renderer.equals(this.renderer)) {
             //println(width, height, renderer, this.width, this.height, this.renderer);
-            if (insideSettings("size", width, height, "\"" + renderer + "\"")) {
-                this.width = width;
-                this.height = height;
-                this.renderer = renderer;
-            }
+            this.width = width;
+            this.height = height;
+            this.renderer = renderer;
         }
     }
 
@@ -1958,14 +1886,10 @@ public class PApplet implements PConstants {
         if (width != this.width ||
                 height != this.height ||
                 !renderer.equals(this.renderer)) {
-            if (insideSettings("size", width, height, "\"" + renderer + "\"",
-                               "\"" + path + "\""
-            )) {
-                this.width = width;
-                this.height = height;
-                this.renderer = renderer;
-                this.outputPath = path;
-            }
+            this.width = width;
+            this.height = height;
+            this.renderer = renderer;
+            this.outputPath = path;
         }
 
     /*
@@ -10490,7 +10414,7 @@ public class PApplet implements PConstants {
         surface.startThread();
     }
 
-    protected PSurface initSurface() {
+    public PSurface initSurface() {
         g = createPrimaryGraphics();
         surface = g.createSurface();
 
@@ -10505,6 +10429,10 @@ public class PApplet implements PConstants {
 
 //    init();
         return surface;
+    }
+
+    public void stopSurface() {
+        surface.stopThread();
     }
 
 //  protected void createSurface() {

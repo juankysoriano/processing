@@ -1,12 +1,11 @@
 import processing.core.PApplet
 import processing.core.PGraphics
-import kotlin.system.measureTimeMillis
 
 fun main(args: Array<String>) {
     Processing.run(
         700,
         700,
-        PApplet.JAVA2D
+        PApplet.P2D
     ) { graphics ->
         graphics.beginDraw()
         graphics.background(0)
@@ -16,7 +15,6 @@ fun main(args: Array<String>) {
         graphics.save("test.jpg")
         graphics.endDraw()
     }
-
 }
 
 
@@ -30,25 +28,18 @@ abstract class Processing {
         ) {
             object : PApplet() {
                 override fun settings() {
-                    measureTimeMillis {
-                        size(0, 0, renderer)
-                        smooth()
-                    }.apply {
-                        println("Settings: $this")
-                    }
+                    size(0, 0, renderer)
+                    smooth()
                 }
-
                 override fun draw() {
-                    measureTimeMillis {
-                        block(createGraphics(width, height, renderer))
-                    }.apply {
-                        println("Draw: $this")
-                    }
+                    block(createGraphics(width, height, renderer))
                 }
             }.apply {
-                measureTimeMillis {
-                    PApplet.runSketch(this)
-                }.apply { println("Run sketch: $this") }
+                settings()
+                initSurface()
+                surface.setVisible(true)
+                surface.startThread()
+                surface.stopThread()
             }
         }
     }
