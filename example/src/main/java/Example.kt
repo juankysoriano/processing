@@ -15,6 +15,7 @@ fun main(args: Array<String>) {
         graphics.save("test.jpg")
         graphics.endDraw()
     }
+
 }
 
 
@@ -23,7 +24,7 @@ abstract class Processing {
         fun run(
             width: Int,
             height: Int,
-            renderer: String = PApplet.JAVA2D,
+            renderer: String = PApplet.P2D,
             block: (PGraphics) -> Unit
         ) {
             object : PApplet() {

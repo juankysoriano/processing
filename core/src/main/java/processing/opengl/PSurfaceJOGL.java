@@ -123,7 +123,6 @@ public class PSurfaceJOGL implements PSurface {
 
     public void initFrame(PApplet sketch) {
         this.sketch = sketch;
-        initDisplay();
         initGL();
         initWindow();
         initListeners();
@@ -134,8 +133,7 @@ public class PSurfaceJOGL implements PSurface {
     }
 
     protected void initDisplay() {
-        GraphicsDevice awtDisplayDevice = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-        displayRect = awtDisplayDevice.getDefaultConfiguration().getBounds();
+
     }
 
     protected void initGL() {
@@ -204,20 +202,10 @@ public class PSurfaceJOGL implements PSurface {
 
     protected void initWindow() {
         window = GLWindow.create(pgl.getCaps());
-        windowScaleFactor = sketch.pixelDensity;
-        screenRect =  new Rectangle(0,0,0,0);
-        sketch.displayWidth = screenRect.width;
-        sketch.displayHeight = screenRect.height;
-        sketchWidth0 = sketch.sketchWidth();
-        sketchHeight0 = sketch.sketchHeight();
-        setSize(sketchWidth, sketchHeight);
+        window.setSize(1,1);
     }
 
     protected void initListeners() {
-
-        NEWTWindowListener winListener = new NEWTWindowListener();
-        window.addWindowListener(winListener);
-
         DrawListener drawlistener = new DrawListener();
         window.addGLEventListener(drawlistener);
     }
@@ -443,35 +431,6 @@ public class PSurfaceJOGL implements PSurface {
 
     class DrawListener implements GLEventListener {
         public void display(GLAutoDrawable drawable) {
-
-            if (sketch.frameCount == 0) {
-                if (sketchWidth < sketchWidth0 || sketchHeight < sketchHeight0) {
-                    PGraphics.showWarning("The sketch has been automatically resized to fit the screen resolution");
-                }
-//        System.out.println("display: " + window.getWidth() + " "+ window.getHeight() + " - " + sketchWidth + " " + sketchHeight);
-                requestFocus();
-            }
-
-            if (!sketch.finished) {
-                pgl.getGL(drawable);
-                int pframeCount = sketch.frameCount;
-                sketch.handleDraw();
-                if (pframeCount == sketch.frameCount || sketch.finished) {
-                    // This hack allows the FBO layer to be swapped normally even if
-                    // the sketch is no looping or finished because it does not call draw(),
-                    // otherwise background artifacts may occur (depending on the hardware/drivers).
-                    pgl.beginRender();
-                    pgl.endRender(sketch.sketchWindowColor());
-                }
-                PGraphicsOpenGL.completeFinishedPixelTransfers();
-            }
-
-            if (sketch.exitCalled()) {
-                PGraphicsOpenGL.completeAllPixelTransfers();
-
-                sketch.dispose(); // calls stopThread(), which stops the animator.
-                sketch.exitActual();
-            }
         }
 
         public void dispose(GLAutoDrawable drawable) {
@@ -482,16 +441,7 @@ public class PSurfaceJOGL implements PSurface {
         public void init(GLAutoDrawable drawable) {
             pgl.getGL(drawable);
             pgl.init(drawable);
-            sketch.start();
-
-            int c = graphics.backgroundColor;
-            pgl.clearColor(
-                    ((c >> 16) & 0xff) / 255f,
-                    ((c >> 8) & 0xff) / 255f,
-                    ((c >> 0) & 0xff) / 255f,
-                    ((c >> 24) & 0xff) / 255f
-            );
-            pgl.clear(PGL.COLOR_BUFFER_BIT);
+            sketch.handleDraw();
         }
 
         public void reshape(GLAutoDrawable drawable, int x, int y, int w, int h) {

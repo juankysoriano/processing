@@ -387,8 +387,8 @@ public class PSurfaceAWT extends PSurfaceNone {
   @Override
   public void initFrame(final PApplet sketch) {/*, int backgroundColor,
                         int deviceIndex, boolean fullScreen, boolean spanDisplays) {*/
-    this.sketch = sketch;
     setSize(0, 0);
+    sketch.handleDraw();
   }
 
 
