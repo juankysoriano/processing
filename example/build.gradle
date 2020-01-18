@@ -8,12 +8,13 @@ sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 mainClassName = 'ExampleKt'
 
 dependencies {
-    implementation project(':core')
+    implementation 'com.github.juankysoriano:processing:make-headless-SNAPSHOT'
     testCompile group: 'junit', name: 'junit', version: '4.12'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
