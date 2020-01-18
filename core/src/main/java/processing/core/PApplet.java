@@ -10420,9 +10420,7 @@ public class PApplet implements PConstants {
 
         // Create fake Frame object to warn user about the changes
         if (g.displayable()) {
-            frame = new Frame();
             surface.initFrame(this); //, backgroundColor, displayNum, fullScreen, spanDisplays);
-
         } else {
             surface.initOffscreen(this);  // for PDF/PSurfaceNone and friends
         }

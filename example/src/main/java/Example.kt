@@ -1,47 +1,19 @@
+import processing.Processing
 import processing.core.PApplet
-import processing.core.PGraphics
+import processing.draw
 
 fun main(args: Array<String>) {
-    Processing.run(
-        700,
-        700,
-        PApplet.P2D
-    ) { graphics ->
-        graphics.beginDraw()
-        graphics.background(0)
-        graphics.stroke(0, 1f)
-        graphics.fill(0f, 255f, 0f, 127f)
-        graphics.ellipse(150f, 150f, 150f, 150f)
-        graphics.save("test.jpg")
-        graphics.endDraw()
+    Processing.initialize(
+        headless = true,
+        openGL = true,
+        renderer = PApplet.JAVA2D
+    )
+    Processing.createGraphics(500, 500).draw {
+        background(0)
+        stroke(0, 1f)
+        fill(0f, 255f, 0f, 127f)
+        ellipse(150f, 150f, 150f, 150f)
+        save("test.jpg")
     }
-
-}
-
-
-abstract class Processing {
-    companion object {
-        fun run(
-            width: Int,
-            height: Int,
-            renderer: String = PApplet.P2D,
-            block: (PGraphics) -> Unit
-        ) {
-            object : PApplet() {
-                override fun settings() {
-                    size(0, 0, renderer)
-                    smooth()
-                }
-                override fun draw() {
-                    block(createGraphics(width, height, renderer))
-                }
-            }.apply {
-                settings()
-                initSurface()
-                surface.setVisible(true)
-                surface.startThread()
-                surface.stopThread()
-            }
-        }
-    }
+    Processing.trigger()
 }

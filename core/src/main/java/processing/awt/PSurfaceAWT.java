@@ -387,6 +387,7 @@ public class PSurfaceAWT extends PSurfaceNone {
   @Override
   public void initFrame(final PApplet sketch) {/*, int backgroundColor,
                         int deviceIndex, boolean fullScreen, boolean spanDisplays) {*/
+    this.sketch = sketch;
     setSize(0, 0);
     sketch.handleDraw();
   }
@@ -529,13 +530,7 @@ public class PSurfaceAWT extends PSurfaceNone {
 
   @Override
   public void setVisible(boolean visible) {
-    frame.setVisible(visible);
-
-    // Generally useful whenever setting the frame visible
-    if (canvas != null) {
-      //canvas.requestFocusInWindow();
-      canvas.requestFocus();
-    }
+    
 
     // removing per https://github.com/processing/processing/pull/3162
     // can remove the code below once 3.0a6 is tested and behaving
