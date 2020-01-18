@@ -75,19 +75,6 @@ val PGraphics.bytes: ByteArray
         it.toByteArray()
     }
 
-fun PGraphics.configure(width: Int, height: Int, format: Format = Format.RGB, quality: Quality = Quality.LOW) {
-    configure(
-        image = PImage(width, height, format.value),
-        quality = quality
-    )
-}
-
-fun PGraphics.configure(image: PImage, quality: Quality) {
-    smooth(quality.value)
-    setSize(image.width, image.height)
-    this.image = image.image
-}
-
 enum class Quality(val value: Int) {
     LOW(0), MID(1), HIGH(2)
 }

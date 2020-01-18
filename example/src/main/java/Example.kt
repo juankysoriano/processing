@@ -6,7 +6,7 @@ fun main(args: Array<String>) {
     Processing.initialize(
         headless = true,
         openGL = true,
-        renderer = PApplet.JAVA2D
+        renderer = PApplet.P2D
     )
     Processing.createGraphics(500, 500).draw {
         background(0)
