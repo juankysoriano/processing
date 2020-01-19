@@ -14,7 +14,8 @@ repositories {
 mainClassName = 'ExampleKt'
 
 dependencies {
-    implementation 'com.github.juankysoriano:processing:make-headless-SNAPSHOT'
+    implementation project(':core')
+    implementation fileTree(dir: 'libs-linux-amd64', include: ['*.jar'])
     testCompile group: 'junit', name: 'junit', version: '4.12'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }

@@ -69,15 +69,12 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.text.*;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.regex.*;
 import java.util.zip.*;
 
-import processing.awt.PGraphicsJava2D;
 import processing.data.*;
 import processing.event.*;
 import processing.opengl.*;
@@ -677,14 +674,6 @@ public class PApplet implements PConstants {
     List<Long> pressedKeys = new ArrayList<>(6);
 
     /**
-     * The last KeyEvent object passed into a mouse function.
-     *
-     * @deprecated Use a key event handler that passes an event instead.
-     */
-    @Deprecated
-    public KeyEvent keyEvent;
-
-    /**
      * ( begin auto-generated from focused.xml )
      * <p>
      * Confirms if a Processing program is "focused", meaning that it is active
@@ -770,12 +759,6 @@ public class PApplet implements PConstants {
 //   * true if the animation thread is paused.
 //   */
 //  public volatile boolean paused;
-
-    /**
-     * true if exit() has been called so that things shut down
-     * once the main thread kicks off.
-     */
-    protected boolean exitCalled;
 
     // messages to send if attached as an external vm
 
@@ -1199,80 +1182,7 @@ public class PApplet implements PConstants {
         // ignore calls to the orientation command
     }
 
-    /**
-     * Called by the browser or applet viewer to inform this applet that it
-     * should start its execution. It is called after the init method and
-     * each time the applet is revisited in a Web page.
-     * <p/>
-     * Called explicitly via the first call to PApplet.paint(), because
-     * PAppletGL needs to have a usable screen before getting things rolling.
-     */
-    public void start() {
-//    paused = false; // unpause the thread  // removing for 3.0a5, don't think we want this here
-
-        resume();
-        handleMethods("resume");
-        surface.resumeThread();
-    }
-
-    /**
-     * Called by the browser or applet viewer to inform
-     * this applet that it should stop its execution.
-     * <p/>
-     * Unfortunately, there are no guarantees from the Java spec
-     * when or if stop() will be called (i.e. on browser quit,
-     * or when moving between web pages), and it's not always called.
-     */
-    public void stop() {
-        // this used to shut down the sketch, but that code has
-        // been moved to destroy/dispose()
-
-//    if (paused) {
-//      synchronized (pauseObject) {
-//      try {
-//          pauseObject.wait();
-//        } catch (InterruptedException e) {
-//          // waiting for this interrupt on a start() (resume) call
-//        }
-//      }
-//    }
-
-        //paused = true; // causes animation thread to sleep  // 3.0a5
-        pause();
-        handleMethods("pause");
-        // calling this down here, since it's another thread it's safer to call
-        // pause() and the registered pause methods first.
-        surface.pauseThread();
-
-        // actual pause will happen in the run() method
-
-//    synchronized (pauseObject) {
-//      debug("stop() calling pauseObject.wait()");
-//      try {
-//        pauseObject.wait();
-//      } catch (InterruptedException e) {
-//        // waiting for this interrupt on a start() (resume) call
-//      }
-//    }
-    }
-
-    /**
-     * Sketch has been paused. Called when switching tabs in a browser or
-     * swapping to a different application on Android. Also called just before
-     * quitting. Use to safely disable things like serial, sound, or sensors.
-     */
-    public void pause() {
-    }
-
-    /**
-     * Sketch has resumed. Called when switching tabs in a browser or
-     * swapping to this application on Android. Also called on startup.
-     * Use this to safely disable things like serial, sound, or sensors.
-     */
-    public void resume() {
-    }
-
-//  /**
+    //  /**
 //   * Called by the browser or applet viewer to inform this applet
 //   * that it is being reclaimed and that it should destroy
 //   * any resources that it has allocated.
@@ -1492,15 +1402,6 @@ public class PApplet implements PConstants {
                 meth.remove(target);
             } catch (Exception e) {
                 die("Could not unregister " + name + "() for " + target, e);
-            }
-        }
-    }
-
-    protected void handleMethods(String methodName) {
-        synchronized (registerLock) {
-            RegisteredMethods meth = registerMap.get(methodName);
-            if (meth != null) {
-                meth.handle();
             }
         }
     }
@@ -2091,14 +1992,12 @@ public class PApplet implements PConstants {
         }
 
         PGraphics pg;
-        if (Objects.equals(renderer, PApplet.JAVA2D)) {
-            pg = new PGraphicsJava2D();
-        } else if (Objects.equals(renderer, PApplet.P2D)) {
+        if (Objects.equals(renderer, PApplet.P2D)) {
             pg = new PGraphics2D();
         } else if (Objects.equals(renderer, PApplet.P3D)) {
             pg = new PGraphics3D();
         } else {
-            pg = new PGraphicsJava2D();
+            pg = new PGraphics2D();
         }
         pg.setParent(this);
         pg.setPrimary(primary);
@@ -2338,161 +2237,6 @@ public class PApplet implements PConstants {
 
     //////////////////////////////////////////////////////////////
 
-    BlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
-    private final Object eventQueueDequeueLock = new Object[0];
-
-    /**
-     * Add an event to the internal event queue, or process it immediately if
-     * the sketch is not currently looping.
-     */
-    public void postEvent(processing.event.Event pe) {
-        eventQueue.add(pe);
-
-        if (!looping) {
-            dequeueEvents();
-        }
-    }
-
-    protected void dequeueEvents() {
-        synchronized (eventQueueDequeueLock) {
-            while (!eventQueue.isEmpty()) {
-                Event e = eventQueue.remove();
-                switch (e.getFlavor()) {
-                    case Event.MOUSE:
-                        handleMouseEvent((MouseEvent) e);
-                        break;
-                    case Event.KEY:
-                        handleKeyEvent((KeyEvent) e);
-                        break;
-                }
-            }
-        }
-    }
-
-    //////////////////////////////////////////////////////////////
-
-    /**
-     * Actually take action based on a mouse event.
-     * Internally updates mouseX, mouseY, mousePressed, and mouseEvent.
-     * Then it calls the event type with no params,
-     * i.e. mousePressed() or mouseReleased() that the user may have
-     * overloaded to do something more useful.
-     */
-    protected void handleMouseEvent(MouseEvent event) {
-        // http://dev.processing.org/bugs/show_bug.cgi?id=170
-        // also prevents mouseExited() on the mac from hosing the mouse
-        // position, because x/y are bizarre values on the exit event.
-        // see also the id check below.. both of these go together.
-        // Not necessary to set mouseX/Y on RELEASE events because the
-        // actual position will have been set by a PRESS or DRAG event.
-        // However, PRESS events might come without a preceeding move,
-        // if the sketch window gains focus on that PRESS.
-        final int action = event.getAction();
-        if (action == MouseEvent.DRAG ||
-                action == MouseEvent.MOVE ||
-                action == MouseEvent.PRESS) {
-            pmouseX = emouseX;
-            pmouseY = emouseY;
-            mouseX = event.getX();
-            mouseY = event.getY();
-        }
-
-        int button = event.getButton();
-
-        // If running on Mac OS, allow ctrl-click as right mouse.
-        if (PApplet.platform == PConstants.MACOSX && event.getButton() == PConstants.LEFT) {
-            if (action == MouseEvent.PRESS && event.isControlDown()) {
-                macosxLeftButtonWithCtrlPressed = true;
-            }
-            if (macosxLeftButtonWithCtrlPressed) {
-                button = PConstants.RIGHT;
-                event = new MouseEvent(event.getNative(), event.getMillis(),
-                                       event.getAction(), event.getModifiers(),
-                                       event.getX(), event.getY(),
-                                       button, event.getCount()
-                );
-            }
-            if (action == MouseEvent.RELEASE) {
-                macosxLeftButtonWithCtrlPressed = false;
-            }
-        }
-
-        // Get the (already processed) button code
-        mouseButton = button;
-
-    /*
-    // Compatibility for older code (these have AWT object params, not P5)
-    if (mouseEventMethods != null) {
-      // Probably also good to check this, in case anyone tries to call
-      // postEvent() with an artificial event they've created.
-      if (event.getNative() != null) {
-        mouseEventMethods.handle(new Object[] { event.getNative() });
-      }
-    }
-    */
-
-        // this used to only be called on mouseMoved and mouseDragged
-        // change it back if people run into trouble
-        if (firstMouse) {
-            pmouseX = mouseX;
-            pmouseY = mouseY;
-            dmouseX = mouseX;
-            dmouseY = mouseY;
-            firstMouse = false;
-        }
-
-        mouseEvent = event;
-
-        // Do this up here in case a registered method relies on the
-        // boolean for mousePressed.
-
-        switch (action) {
-            case MouseEvent.PRESS:
-                mousePressed = true;
-                break;
-            case MouseEvent.RELEASE:
-                mousePressed = false;
-                break;
-        }
-
-        handleMethods("mouseEvent", new Object[]{event});
-
-        switch (action) {
-            case MouseEvent.PRESS:
-//      mousePressed = true;
-                mousePressed(event);
-                break;
-            case MouseEvent.RELEASE:
-//      mousePressed = false;
-                mouseReleased(event);
-                break;
-            case MouseEvent.CLICK:
-                mouseClicked(event);
-                break;
-            case MouseEvent.DRAG:
-                mouseDragged(event);
-                break;
-            case MouseEvent.MOVE:
-                mouseMoved(event);
-                break;
-            case MouseEvent.ENTER:
-                mouseEntered(event);
-                break;
-            case MouseEvent.EXIT:
-                mouseExited(event);
-                break;
-            case MouseEvent.WHEEL:
-                mouseWheel(event);
-                break;
-        }
-
-        if ((action == MouseEvent.DRAG) ||
-                (action == MouseEvent.MOVE)) {
-            emouseX = mouseX;
-            emouseY = mouseY;
-        }
-    }
-
     /**
      * ( begin auto-generated from mousePressed.xml )
      * <p>
@@ -2691,69 +2435,6 @@ public class PApplet implements PConstants {
 
     //////////////////////////////////////////////////////////////
 
-    protected void handleKeyEvent(KeyEvent event) {
-
-        // Get rid of auto-repeating keys if desired and supported
-        if (!keyRepeatEnabled && event.isAutoRepeat()) {
-            return;
-        }
-
-        keyEvent = event;
-        key = event.getKey();
-        keyCode = event.getKeyCode();
-
-        switch (event.getAction()) {
-            case KeyEvent.PRESS:
-                Long hash = ((long) keyCode << Character.SIZE) | key;
-                if (!pressedKeys.contains(hash)) {
-                    pressedKeys.add(hash);
-                }
-                keyPressed = true;
-                keyPressed(keyEvent);
-                break;
-            case KeyEvent.RELEASE:
-                pressedKeys.remove(((long) keyCode << Character.SIZE) | key);
-                keyPressed = !pressedKeys.isEmpty();
-                keyReleased(keyEvent);
-                break;
-            case KeyEvent.TYPE:
-                keyTyped(keyEvent);
-                break;
-        }
-
-    /*
-    if (keyEventMethods != null) {
-      keyEventMethods.handle(new Object[] { event.getNative() });
-    }
-    */
-
-        handleMethods("keyEvent", new Object[]{event});
-
-        // if someone else wants to intercept the key, they should
-        // set key to zero (or something besides the ESC).
-        if (event.getAction() == KeyEvent.PRESS) {
-            //if (key == java.awt.event.KeyEvent.VK_ESCAPE) {
-            if (key == ESC) {
-                exit();
-            }
-            // When running tethered to the Processing application, respond to
-            // Ctrl-W (or Cmd-W) events by closing the sketch. Not enabled when
-            // running independently, because this sketch may be one component
-            // embedded inside an application that has its own close behavior.
-            if (external &&
-                    event.getKeyCode() == 'W' &&
-                    ((event.isMetaDown() && platform == MACOSX) ||
-                            (event.isControlDown() && platform != MACOSX))) {
-                // Can't use this native stuff b/c the native event might be NEWT
-//      if (external && event.getNative() instanceof java.awt.event.KeyEvent &&
-//          ((java.awt.event.KeyEvent) event.getNative()).getModifiers() ==
-//            Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() &&
-//          event.getKeyCode() == 'W') {
-                exit();
-            }
-        }
-    }
-
     /**
      * ( begin auto-generated from keyPressed.xml )
      * <p>
@@ -2832,10 +2513,6 @@ public class PApplet implements PConstants {
     public void keyPressed() {
     }
 
-    public void keyPressed(KeyEvent event) {
-        keyPressed();
-    }
-
     /**
      * ( begin auto-generated from keyReleased.xml )
      * <p>
@@ -2852,10 +2529,6 @@ public class PApplet implements PConstants {
      * @see PApplet#keyPressed()
      */
     public void keyReleased() {
-    }
-
-    public void keyReleased(KeyEvent event) {
-        keyReleased();
     }
 
     /**
@@ -2876,10 +2549,6 @@ public class PApplet implements PConstants {
      * @see PApplet#keyReleased()
      */
     public void keyTyped() {
-    }
-
-    public void keyTyped(KeyEvent event) {
-        keyTyped();
     }
 
     //////////////////////////////////////////////////////////////
@@ -3091,31 +2760,6 @@ public class PApplet implements PConstants {
         }
         //}
         //}
-    }
-
-    /**
-     * ( begin auto-generated from frameRate.xml )
-     * <p>
-     * Specifies the number of frames to be displayed every second. If the
-     * processor is not fast enough to maintain the specified rate, it will not
-     * be achieved. For example, the function call <b>frameRate(30)</b> will
-     * attempt to refresh 30 times a second. It is recommended to set the frame
-     * rate within <b>setup()</b>. The default rate is 60 frames per second.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @param fps number of desired frames per second
-     * @webref environment
-     * @see PApplet#frameRate
-     * @see PApplet#frameCount
-     * @see PApplet#setup()
-     * @see PApplet#draw()
-     * @see PApplet#loop()
-     * @see PApplet#noLoop()
-     * @see PApplet#redraw()
-     */
-    public void frameRate(float fps) {
-        surface.setFrameRate(fps);
     }
 
     //////////////////////////////////////////////////////////////
@@ -3433,7 +3077,6 @@ public class PApplet implements PConstants {
      * display an error. Mostly this is here to be improved later.
      */
     public void die(String what) {
-        dispose();
         throw new RuntimeException(what);
     }
 
@@ -3445,101 +3088,6 @@ public class PApplet implements PConstants {
             e.printStackTrace();
         }
         die(what);
-    }
-
-    /**
-     * ( begin auto-generated from exit.xml )
-     * <p>
-     * Quits/stops/exits the program. Programs without a <b>draw()</b> function
-     * exit automatically after the last line has run, but programs with
-     * <b>draw()</b> run continuously until the program is manually stopped or
-     * <b>exit()</b> is run.<br />
-     * <br />
-     * Rather than terminating immediately, <b>exit()</b> will cause the sketch
-     * to exit after <b>draw()</b> has completed (or after <b>setup()</b>
-     * completes if called during the <b>setup()</b> function).<br />
-     * <br />
-     * For Java programmers, this is <em>not</em> the same as System.exit().
-     * Further, System.exit() should not be used because closing out an
-     * application while <b>draw()</b> is running may cause a crash
-     * (particularly with P3D).
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref structure
-     */
-    public void exit() {
-        if (surface.isStopped()) {
-            // exit immediately, dispose() has already been called,
-            // meaning that the main thread has long since exited
-            exitActual();
-
-        } else if (looping) {
-            // dispose() will be called as the thread exits
-            finished = true;
-            // tell the code to call exitActual() to do a System.exit()
-            // once the next draw() has completed
-            exitCalled = true;
-
-        } else if (!looping) {
-            // if not looping, shut down things explicitly,
-            // because the main thread will be sleeping
-            dispose();
-
-            // now get out
-            exitActual();
-        }
-    }
-
-    public boolean exitCalled() {
-        return exitCalled;
-    }
-
-    /**
-     * Some subclasses (I'm looking at you, processing.py) might wish to do something
-     * other than actually terminate the JVM. This gives them a chance to do whatever
-     * they have in mind when cleaning up.
-     */
-    public void exitActual() {
-        try {
-            System.exit(0);
-        } catch (SecurityException e) {
-            // don't care about applet security exceptions
-        }
-    }
-
-    /**
-     * Called to dispose of resources and shut down the sketch.
-     * Destroys the thread, dispose the renderer,and notify listeners.
-     * <p>
-     * Not to be called or overriden by users. If called multiple times,
-     * will only notify listeners once. Register a dispose listener instead.
-     */
-    public void dispose() {
-        // moved here from stop()
-        finished = true;  // let the sketch know it is shut down time
-
-        // don't run the disposers twice
-        if (surface.stopThread()) {
-
-            // shut down renderer
-            if (g != null) {
-                g.dispose();
-            }
-            // run dispose() methods registered by libraries
-            handleMethods("dispose");
-        }
-
-        if (platform == MACOSX) {
-            try {
-                final String td = "processing.core.ThinkDifferent";
-                final Class<?> thinkDifferent = getClass().getClassLoader().loadClass(td);
-                thinkDifferent.getMethod("cleanup").invoke(null);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
     }
 
     //////////////////////////////////////////////////////////////
@@ -3707,83 +3255,6 @@ public class PApplet implements PConstants {
     // CURSOR
 
     //
-
-    /**
-     * Set the cursor type
-     *
-     * @param kind either ARROW, CROSS, HAND, MOVE, TEXT, or WAIT
-     */
-    public void cursor(int kind) {
-        surface.setCursor(kind);
-    }
-
-    /**
-     * Replace the cursor with the specified PImage. The x- and y-
-     * coordinate of the center will be the center of the image.
-     */
-    public void cursor(PImage img) {
-        cursor(img, img.width / 2, img.height / 2);
-    }
-
-    /**
-     * ( begin auto-generated from cursor.xml )
-     * <p>
-     * Sets the cursor to a predefined symbol, an image, or makes it visible if
-     * already hidden. If you are trying to set an image as the cursor, it is
-     * recommended to make the size 16x16 or 32x32 pixels. It is not possible
-     * to load an image as the cursor if you are exporting your program for the
-     * Web and not all MODES work with all Web browsers. The values for
-     * parameters <b>x</b> and <b>y</b> must be less than the dimensions of the image.
-     * <br /> <br />
-     * Setting or hiding the cursor generally does not work with "Present" mode
-     * (when running full-screen).
-     * <p>
-     * ( end auto-generated )
-     * <h3>Advanced</h3>
-     * Set a custom cursor to an image with a specific hotspot.
-     * Only works with JDK 1.2 and later.
-     * Currently seems to be broken on Java 1.4 for Mac OS X
-     * <p>
-     * Based on code contributed by Amit Pitaru, plus additional
-     * code to handle Java versions via reflection by Jonathan Feinberg.
-     * Reflection removed for release 0128 and later.
-     *
-     * @param img any variable of type PImage
-     * @param x   the horizontal active spot of the cursor
-     * @param y   the vertical active spot of the cursor
-     * @webref environment
-     * @see PApplet#noCursor()
-     */
-    public void cursor(PImage img, int x, int y) {
-        surface.setCursor(img, x, y);
-    }
-
-    /**
-     * Show the cursor after noCursor() was called.
-     * Notice that the program remembers the last set cursor type
-     */
-    public void cursor() {
-        surface.showCursor();
-    }
-
-    /**
-     * ( begin auto-generated from noCursor.xml )
-     * <p>
-     * Hides the cursor from view. Will not work when running the program in a
-     * web browser or when running in full screen (Present) mode.
-     * <p>
-     * ( end auto-generated )
-     * <h3>Advanced</h3>
-     * Hide the cursor by creating a transparent image
-     * and using it as a custom cursor.
-     *
-     * @webref environment
-     * @usage Application
-     * @see PApplet#cursor()
-     */
-    public void noCursor() {
-        surface.hideCursor();
-    }
 
     //////////////////////////////////////////////////////////////
 
@@ -10395,7 +9866,6 @@ public class PApplet implements PConstants {
         constructedSketch.handleSettings();
         constructedSketch.initSurface();
         constructedSketch.showSurface();
-        constructedSketch.startSurface();
     }
 
     /**
@@ -10405,13 +9875,6 @@ public class PApplet implements PConstants {
         if (getGraphics().displayable()) {
             surface.setVisible(true);
         }
-    }
-
-    /**
-     * See warning in showSurface()
-     */
-    protected void startSurface() {
-        surface.startThread();
     }
 
     public PSurface initSurface() {
@@ -10429,11 +9892,7 @@ public class PApplet implements PConstants {
         return surface;
     }
 
-    public void stopSurface() {
-        surface.stopThread();
-    }
-
-//  protected void createSurface() {
+    //  protected void createSurface() {
 //    surface = g.createSurface();
 //    if (surface == null) {
 //      System.err.println("This renderer needs to be updated for Processing 3");

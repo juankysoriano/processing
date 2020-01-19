@@ -17,18 +17,13 @@ abstract class Processing {
                        openGL: Boolean = false,
                        renderer: String = JAVA2D
         ) {
+            this.renderer = renderer
             System.setProperty("java.awt.headless", headless.toString())
             System.setProperty("sun.java2d.opengl", openGL.toString())
-            applet = object : PApplet() {
-                override fun settings() {
-                    size(0, 0, renderer)
-                }
-
-                override fun draw() {}
-            }.apply {
-                settings()
+            applet = PApplet()
+            with(applet!!) {
+                size(0, 0, renderer)
                 initSurface()
-                surface.setVisible(true)
             }
         }
 
@@ -49,20 +44,17 @@ abstract class Processing {
                     smooth(quality.value)
                 }
 
-        fun trigger() {
-            checkNotNull(applet, { "Cannot trigger graphics before initialising processing" }).apply {
-                surface.startThread()
-                surface.stopThread()
-            }
-
-        }
     }
 }
 
-inline fun PGraphics.draw(block: PGraphics.() -> Unit) {
-    beginDraw()
-    block(this)
-    endDraw()
+inline fun PGraphics.draw(crossinline block: PGraphics.() -> Unit) {
+    parent.surface.render {
+        parent.graphics.beginDraw()
+        beginDraw()
+        block(this)
+        endDraw()
+        parent.graphics.endDraw()
+    }
 }
 
 inline val PGraphics.area

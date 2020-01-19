@@ -48,8 +48,9 @@ import java.util.concurrent.TimeUnit;
 
 import processing.opengl.PGL;
 import processing.opengl.PShader;
+import processing.opengl.PSurfaceJOGL;
 
-  /**
+/**
    * ( begin auto-generated from PGraphics.xml )
    *
    * Main graphics and rendering context, as well as the base API
@@ -817,7 +818,7 @@ public class PGraphics extends PImage implements PConstants {
 
 
   public PSurface createSurface() {  // ignore
-    return surface = new PSurfaceNone(this);
+    return surface = new PSurfaceJOGL(this);
   }
 
 
