@@ -43,7 +43,7 @@ public class PSurfaceJOGL implements PSurface {
     }
 
     public void init() {
-        GLCapabilities caps = new GLCapabilities(GLProfile.getGL4ES3());
+        GLCapabilities caps = new GLCapabilities(GLProfile.getDefault());
         caps.setAlphaBits(PGL.REQUESTED_ALPHA_BITS);
         caps.setDepthBits(PGL.REQUESTED_DEPTH_BITS);
         caps.setStencilBits(PGL.REQUESTED_STENCIL_BITS);
