@@ -1,5 +1,6 @@
 package processing
 
+import com.jogamp.opengl.GLProfile
 import processing.core.PApplet
 import processing.core.PConstants.P2D
 import processing.core.PGraphics
@@ -15,7 +16,8 @@ abstract class Processing {
         private var renderer: String = P2D
         fun initialize(headless: Boolean = true,
                        openGL: Boolean = true,
-                       renderer: String = P2D
+                       renderer: String = P2D,
+                       profile: GLProfile = GLProfile.getDefault()
         ) {
             this.renderer = renderer
             System.setProperty("java.awt.headless", headless.toString())
@@ -23,7 +25,7 @@ abstract class Processing {
             applet = PApplet()
             with(applet!!) {
                 size(0, 0, renderer)
-                initSurface()
+                initSurface(profile)
             }
         }
 

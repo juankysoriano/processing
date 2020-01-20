@@ -22,12 +22,14 @@
 
 package processing.core;
 
+import com.jogamp.opengl.GLProfile;
+
 import org.jetbrains.annotations.NotNull;
 
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
 
 public interface PSurface {
-  void init();
+  void init(GLProfile profile);
   void render(@NotNull Function0<Unit> function);
 }

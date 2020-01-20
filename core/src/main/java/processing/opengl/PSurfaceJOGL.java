@@ -42,8 +42,7 @@ public class PSurfaceJOGL implements PSurface {
         this.pgl = (PJOGL) ((PGraphicsOpenGL) graphics).pgl;
     }
 
-    public void init() {
-        GLProfile profile = GLProfile.getDefault();
+    public void init(GLProfile profile) {
         GLCapabilities caps = new GLCapabilities(profile);
         caps.setAlphaBits(PGL.REQUESTED_ALPHA_BITS);
         caps.setDepthBits(PGL.REQUESTED_DEPTH_BITS);

@@ -26,6 +26,8 @@ package processing.core;
 
 // dummy object for backwards compatibility, plus the select methods
 
+import com.jogamp.opengl.GLProfile;
+
 import java.awt.Frame;
 
 // before calling settings() to get displayWidth/Height
@@ -6973,10 +6975,10 @@ public class PApplet implements PConstants {
 
     // MAIN
 
-    public PSurface initSurface() {
+    public PSurface initSurface(GLProfile profile) {
         g = createPrimaryGraphics();
         surface = g.createSurface();
-        surface.init();
+        surface.init(profile);
         return surface;
     }
 
