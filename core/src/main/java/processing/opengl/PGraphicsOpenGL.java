@@ -1442,14 +1442,11 @@ public class PGraphicsOpenGL extends PGraphics {
     checkSettings();
 
     drawing = true;
-
-    report("bot beginDraw()");
   }
 
 
   @Override
   public void endDraw() {
-    //report("top endDraw()");
 
     if (!drawing) {
       return;
@@ -1471,7 +1468,6 @@ public class PGraphicsOpenGL extends PGraphics {
     }
     drawing = false;
 
-    //report("bot endDraw()");
   }
 
 
@@ -5315,24 +5311,6 @@ public class PGraphicsOpenGL extends PGraphics {
   // WARNINGS and EXCEPTIONS
 
   // showWarning() and showException() available from PGraphics.
-
-  /**
-   * Report on anything from glError().
-   * Don't use this inside glBegin/glEnd otherwise it'll
-   * throw an GL_INVALID_OPERATION error.
-   */
-  protected void report(String where) {
-    if (!hints[DISABLE_OPENGL_ERRORS]) {
-      int err = pgl.getError();
-      if (err != 0) {
-        String errString = pgl.errorString(err);
-        String msg = "OpenGL error " + err + " at " + where + ": " + errString;
-        PGraphics.showWarning(msg);
-      }
-    }
-  }
-
-
 
   //////////////////////////////////////////////////////////////
 

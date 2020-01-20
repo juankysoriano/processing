@@ -57,25 +57,12 @@ public interface PConstants {
   });
   */
 
-  static final String JAVA2D = "processing.awt.PGraphicsJava2D";
-
   static final String P2D = "processing.opengl.PGraphics2D";
   static final String P3D = "processing.opengl.PGraphics3D";
 
   // When will it be time to remove this?
   @Deprecated
   static final String OPENGL = P3D;
-
-  // Experimental, higher-performance Java 2D renderer (but no pixel ops)
-//  static final String E2D = PGraphicsDanger2D.class.getName();
-
-  // Experimental JavaFX renderer; even better 2D performance
-  static final String FX2D = "processing.javafx.PGraphicsFX2D";
-
-  static final String PDF = "processing.pdf.PGraphicsPDF";
-  static final String SVG = "processing.svg.PGraphicsSVG";
-  static final String DXF = "processing.dxf.RawDXF";
-
   // platform IDs for PApplet.platform
 
   static final int OTHER   = 0;

@@ -434,21 +434,7 @@ public abstract class PGL {
     }
   }
 
-
-  abstract public Object getNative();
-
-
-  abstract protected void setFrameRate(float fps);
-
-
   abstract protected void initSurface(int antialias);
-
-
-  abstract protected void reinitSurface();
-
-
-  abstract protected void registerListeners();
-
 
   protected int getReadFramebuffer()  {
     return fboLayerEnabled ? glColorFbo.get(0) : 0;

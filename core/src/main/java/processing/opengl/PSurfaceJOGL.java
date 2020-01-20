@@ -25,98 +25,77 @@
 package processing.opengl;
 
 import com.jogamp.opengl.*;
-import com.jogamp.newt.opengl.GLWindow;
 
 import org.jetbrains.annotations.NotNull;
 
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
-import processing.core.PApplet;
-import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PSurface;
 
 public class PSurfaceJOGL implements PSurface {
-    /**
-     * Selected GL profile
-     */
+
     public static GLProfile profile;
     public PJOGL pgl;
-    protected GLWindow window;
-    protected PApplet sketch;
-    protected PGraphics graphics;
-    protected int sketchWidth;
-    protected int sketchHeight;
-
-    protected float[] currentPixelScale = {0, 0};
-
-    protected boolean external = false;
+    protected GLOffscreenAutoDrawable drawable;
 
     public PSurfaceJOGL(PGraphics graphics) {
-        this.graphics = graphics;
         this.pgl = (PJOGL) ((PGraphicsOpenGL) graphics).pgl;
     }
 
-    public void initOffscreen(PApplet sketch) {
-        this.sketch = sketch;
-        sketchWidth = sketch.sketchWidth();
-        sketchHeight = sketch.sketchHeight();
-    }
-
-    public void initFrame(PApplet sketch) {
-        this.sketch = sketch;
+    public void init() {
         initGL();
-        initWindow();
-        initListeners();
-    }
-
-    public Object getNative() {
-        return window;
+        initDrawable();
     }
 
     protected void initGL() {
         if (profile == null) {
-            if (PJOGL.profile == 1) {
-                try {
-                    profile = GLProfile.getGL2ES1();
-                } catch (GLException ex) {
-                    profile = GLProfile.getMaxFixedFunc(true);
-                }
-            } else if (PJOGL.profile == 2) {
-                try {
-                    profile = GLProfile.getGL2ES2();
-
-                    // workaround for https://jogamp.org/bugzilla/show_bug.cgi?id=1347
-                    if (!profile.isHardwareRasterizer()) {
-                        GLProfile hardware = GLProfile.getMaxProgrammable(true);
-                        if (hardware.isGL2ES2()) {
-                            profile = hardware;
-                        }
+            switch (PJOGL.profile) {
+                case 1:
+                    try {
+                        profile = GLProfile.getGL2ES1();
+                    } catch (GLException ex) {
+                        profile = GLProfile.getMaxFixedFunc(true);
                     }
+                    break;
+                case 2:
+                    try {
+                        profile = GLProfile.getGL2ES2();
 
-                } catch (GLException ex) {
-                    profile = GLProfile.getMaxProgrammable(true);
-                }
-            } else if (PJOGL.profile == 3) {
-                try {
-                    profile = GLProfile.getGL2GL3();
-                } catch (GLException ex) {
-                    profile = GLProfile.getMaxProgrammable(true);
-                }
-                if (!profile.isGL3()) {
-                    PGraphics.showWarning("Requested profile GL3 but is not available, got: " + profile);
-                }
-            } else if (PJOGL.profile == 4) {
-                try {
-                    profile = GLProfile.getGL4ES3();
-                } catch (GLException ex) {
-                    profile = GLProfile.getMaxProgrammable(true);
-                }
-                if (!profile.isGL4()) {
-                    PGraphics.showWarning("Requested profile GL4 but is not available, got: " + profile);
-                }
-            } else {
-                throw new RuntimeException(PGL.UNSUPPORTED_GLPROF_ERROR);
+                        // workaround for https://jogamp.org/bugzilla/show_bug.cgi?id=1347
+                        if (!profile.isHardwareRasterizer()) {
+                            GLProfile hardware = GLProfile.getMaxProgrammable(true);
+                            if (hardware.isGL2ES2()) {
+                                profile = hardware;
+                            }
+                        }
+
+                    } catch (GLException ex) {
+                        profile = GLProfile.getMaxProgrammable(true);
+                    }
+                    break;
+                case 3:
+                    try {
+                        profile = GLProfile.getGL2GL3();
+                    } catch (GLException ex) {
+                        profile = GLProfile.getMaxProgrammable(true);
+                    }
+                    if (!profile.isGL3()) {
+                        PGraphics.showWarning("Requested profile GL3 but is not available, got: " + profile);
+                    }
+                    break;
+                case 4:
+                    try {
+                        profile = GLProfile.getGL4ES3();
+                    } catch (GLException ex) {
+                        profile = GLProfile.getMaxProgrammable(true);
+                    }
+                    if (!profile.isGL4()) {
+                        PGraphics.showWarning("Requested profile GL4 but is not available, got: " + profile);
+                    }
+                    break;
+                default:
+                    throw new RuntimeException(PGL.UNSUPPORTED_GLPROF_ERROR);
             }
         }
 
@@ -125,69 +104,38 @@ public class PSurfaceJOGL implements PSurface {
         caps.setDepthBits(PGL.REQUESTED_DEPTH_BITS);
         caps.setStencilBits(PGL.REQUESTED_STENCIL_BITS);
         caps.setSampleBuffers(true);
-        caps.setNumSamples(PGL.smoothToSamples(graphics.smooth));
+        caps.setNumSamples(PGL.smoothToSamples(0));
         caps.setBackgroundOpaque(true);
         caps.setOnscreen(true);
         pgl.setCaps(caps);
     }
 
-    protected void initWindow() {
-        window = GLWindow.create(pgl.getCaps());
-        window.setVisible(true);
-    }
-
-    protected void initListeners() {
-        DrawListener drawlistener = new DrawListener();
-        window.addGLEventListener(drawlistener);
-    }
-
-    @Override
-    public void setVisible(final boolean visible) {
-        window.setVisible(visible);
+    protected void initDrawable() {
+        drawable = GLDrawableFactory.getEGLFactory().createOffscreenAutoDrawable(
+                GLDrawableFactory.getEGLFactory().getDefaultDevice(),
+                pgl.getCaps(),
+                null,
+                1,
+                1
+        );
+        drawable.setContext(drawable.createContext(null), true);
+        drawable.invoke(true, glAutoDrawable -> {
+            pgl.getGL(glAutoDrawable);
+            pgl.init(glAutoDrawable);
+            return true;
+        });
     }
 
     @Override
     public void render(@NotNull Function0<Unit> function) {
-        window.invoke(true, glAutoDrawable -> {
+        drawable.invoke(true, glAutoDrawable -> {
             function.invoke();
             return true;
         });
     }
 
-
     public float getPixelScale() {
-        if (graphics.pixelDensity == 1) {
-            return 1;
-        }
-
-        if (PApplet.platform == PConstants.MACOSX) {
-            return getCurrentPixelScale();
-        }
-
-        return 2;
+        return 1;
     }
 
-    private float getCurrentPixelScale() {
-        // Even if the graphics are retina, the user might have moved the window
-        // into a non-retina monitor, so we need to check
-        window.getCurrentSurfaceScale(currentPixelScale);
-        return currentPixelScale[0];
-    }
-
-    class DrawListener implements GLEventListener {
-        public void display(GLAutoDrawable drawable) {
-        }
-
-        public void dispose(GLAutoDrawable drawable) {
-        }
-
-
-        public void init(GLAutoDrawable drawable) {
-            pgl.getGL(drawable);
-            pgl.init(drawable);
-        }
-
-        public void reshape(GLAutoDrawable drawable, int x, int y, int w, int h) {
-        }
-    }
 }

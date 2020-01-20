@@ -1,7 +1,7 @@
 package processing
 
 import processing.core.PApplet
-import processing.core.PConstants.JAVA2D
+import processing.core.PConstants.P2D
 import processing.core.PGraphics
 import processing.core.PImage
 import java.awt.Image
@@ -12,10 +12,10 @@ import javax.imageio.ImageIO
 abstract class Processing {
     companion object {
         private var applet: PApplet? = null
-        private var renderer: String = JAVA2D
-        fun initialize(headless: Boolean = false,
-                       openGL: Boolean = false,
-                       renderer: String = JAVA2D
+        private var renderer: String = P2D
+        fun initialize(headless: Boolean = true,
+                       openGL: Boolean = true,
+                       renderer: String = P2D
         ) {
             this.renderer = renderer
             System.setProperty("java.awt.headless", headless.toString())

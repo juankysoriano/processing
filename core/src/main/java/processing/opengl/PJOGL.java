@@ -148,28 +148,8 @@ public class PJOGL extends PGL {
     glu = new GLU();
   }
 
-
-  @Override
-  public Object getNative() {
-    return sketch.getSurface().getNative();
-  }
-
-
-  @Override
-  protected void setFrameRate(float fps) {}
-
-
   @Override
   protected void initSurface(int antialias) {}
-
-
-  @Override
-  protected void reinitSurface() {}
-
-
-  @Override
-  protected void registerListeners() {}
-
 
   static public void setIcon(String... icons) {
     PJOGL.icons = new String[icons.length];
@@ -289,7 +269,7 @@ public class PJOGL extends PGL {
   @Override
   protected void swapBuffers()  {
     PSurfaceJOGL surf = (PSurfaceJOGL)sketch.getSurface();
-    surf.window.swapBuffers();
+    surf.drawable.swapBuffers();
   }
 
 

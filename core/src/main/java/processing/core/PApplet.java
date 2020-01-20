@@ -30,8 +30,6 @@ import java.awt.Frame;
 
 // before calling settings() to get displayWidth/Height
 // handleSettings() and displayDensity()
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 // used to present the fullScreen() warning about Spaces on OS X
 
 // inside runSketch() to warn users about headless
@@ -45,15 +43,10 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 // used by selectInput(), selectOutput(), selectFolder()
-import java.awt.EventQueue;
-import java.awt.FileDialog;
-import javax.swing.JFileChooser;
 
 // set the look and feel, if specified
-import javax.swing.UIManager;
 
 // used by link()
-import java.awt.Desktop;
 
 // used by desktopFile() method
 import javax.swing.filechooser.FileSystemView;
@@ -76,7 +69,6 @@ import java.util.regex.*;
 import java.util.zip.*;
 
 import processing.data.*;
-import processing.event.*;
 import processing.opengl.*;
 
 /**
@@ -166,63 +158,14 @@ public class PApplet implements PConstants {
     }
 
     /**
-     * Whether to use native (AWT) dialogs for selectInput and selectOutput.
-     * The native dialogs on some platforms can be ugly, buggy, or missing
-     * features. For 3.3.5, this defaults to true on all platforms.
-     */
-    static public boolean useNativeSelect = true;
-
-    /**
      * The PGraphics renderer associated with this PApplet
      */
     public PGraphics g;
 
     /**
-     * ( begin auto-generated from displayWidth.xml )
-     * <p>
-     * System variable which stores the width of the computer screen. For
-     * example, if the current screen resolution is 1024x768,
-     * <b>displayWidth</b> is 1024 and <b>displayHeight</b> is 768. These
-     * dimensions are useful when exporting full-screen applications.
-     * <br /><br />
-     * To ensure that the sketch takes over the entire screen, use "Present"
-     * instead of "Run". Otherwise the window will still have a frame border
-     * around it and not be placed in the upper corner of the screen. On Mac OS
-     * X, the menu bar will remain present unless "Present" mode is used.
-     * <p>
-     * ( end auto-generated )
-     */
-    public int displayWidth;
-
-    /**
-     * ( begin auto-generated from displayHeight.xml )
-     * <p>
-     * System variable that stores the height of the computer screen. For
-     * example, if the current screen resolution is 1024x768,
-     * <b>displayWidth</b> is 1024 and <b>displayHeight</b> is 768. These
-     * dimensions are useful when exporting full-screen applications.
-     * <br /><br />
-     * To ensure that the sketch takes over the entire screen, use "Present"
-     * instead of "Run". Otherwise the window will still have a frame border
-     * around it and not be placed in the upper corner of the screen. On Mac OS
-     * X, the menu bar will remain present unless "Present" mode is used.
-     * <p>
-     * ( end auto-generated )
-     */
-    public int displayHeight;
-
-    /**
      * A leech graphics object that is echoing all events.
      */
     public PGraphics recorder;
-
-    /**
-     * Command line options passed in from main().
-     * This does not include the arguments passed in to PApplet itself.
-     *
-     * @see PApplet#main
-     */
-    public String[] args;
 
     /**
      * Path to sketch folder. Previously undocumented, made private in 3.0a5
@@ -285,7 +228,6 @@ public class PApplet implements PConstants {
      * @see PApplet#get(int, int, int, int)
      * @see PApplet#set(int, int, int)
      * @see PImage
-     * @see PApplet#pixelDensity()
      * @see PApplet#pixelWidth
      * @see PApplet#pixelHeight
      */
@@ -343,8 +285,6 @@ public class PApplet implements PConstants {
      *
      * @webref environment
      * @see PApplet#pixelHeight
-     * @see #pixelDensity(int)
-     * @see #displayDensity()
      */
     public int pixelWidth;
 
@@ -366,8 +306,6 @@ public class PApplet implements PConstants {
      *
      * @webref environment
      * @see PApplet#pixelWidth
-     * @see #pixelDensity(int)
-     * @see #displayDensity()
      */
     public int pixelHeight;
 
@@ -376,319 +314,7 @@ public class PApplet implements PConstants {
      */
     protected boolean keyRepeatEnabled = false;
 
-    /**
-     * ( begin auto-generated from mouseX.xml )
-     * <p>
-     * The system variable <b>mouseX</b> always contains the current horizontal
-     * coordinate of the mouse.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:mouse
-     * @see PApplet#mouseY
-     * @see PApplet#pmouseX
-     * @see PApplet#pmouseY
-     * @see PApplet#mousePressed
-     * @see PApplet#mousePressed()
-     * @see PApplet#mouseReleased()
-     * @see PApplet#mouseClicked()
-     * @see PApplet#mouseMoved()
-     * @see PApplet#mouseDragged()
-     * @see PApplet#mouseButton
-     * @see PApplet#mouseWheel(MouseEvent)
-     */
-    public int mouseX;
-
-    /**
-     * ( begin auto-generated from mouseY.xml )
-     * <p>
-     * The system variable <b>mouseY</b> always contains the current vertical
-     * coordinate of the mouse.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:mouse
-     * @see PApplet#mouseX
-     * @see PApplet#pmouseX
-     * @see PApplet#pmouseY
-     * @see PApplet#mousePressed
-     * @see PApplet#mousePressed()
-     * @see PApplet#mouseReleased()
-     * @see PApplet#mouseClicked()
-     * @see PApplet#mouseMoved()
-     * @see PApplet#mouseDragged()
-     * @see PApplet#mouseButton
-     * @see PApplet#mouseWheel(MouseEvent)
-     */
-    public int mouseY;
-
-    /**
-     * ( begin auto-generated from pmouseX.xml )
-     * <p>
-     * The system variable <b>pmouseX</b> always contains the horizontal
-     * position of the mouse in the frame previous to the current frame.<br />
-     * <br />
-     * You may find that <b>pmouseX</b> and <b>pmouseY</b> have different
-     * values inside <b>draw()</b> and inside events like <b>mousePressed()</b>
-     * and <b>mouseMoved()</b>. This is because they're used for different
-     * roles, so don't mix them. Inside <b>draw()</b>, <b>pmouseX</b> and
-     * <b>pmouseY</b> update only once per frame (once per trip through your
-     * <b>draw()</b>). But, inside mouse events, they update each time the
-     * event is called. If they weren't separated, then the mouse would be read
-     * only once per frame, making response choppy. If the mouse variables were
-     * always updated multiple times per frame, using <NOBR><b>line(pmouseX,
-     * pmouseY, mouseX, mouseY)</b></NOBR> inside <b>draw()</b> would have lots
-     * of gaps, because <b>pmouseX</b> may have changed several times in
-     * between the calls to <b>line()</b>. Use <b>pmouseX</b> and
-     * <b>pmouseY</b> inside <b>draw()</b> if you want values relative to the
-     * previous frame. Use <b>pmouseX</b> and <b>pmouseY</b> inside the mouse
-     * functions if you want continuous response.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:mouse
-     * @see PApplet#mouseX
-     * @see PApplet#mouseY
-     * @see PApplet#pmouseY
-     * @see PApplet#mousePressed
-     * @see PApplet#mousePressed()
-     * @see PApplet#mouseReleased()
-     * @see PApplet#mouseClicked()
-     * @see PApplet#mouseMoved()
-     * @see PApplet#mouseDragged()
-     * @see PApplet#mouseButton
-     * @see PApplet#mouseWheel(MouseEvent)
-     */
-    public int pmouseX;
-
-    /**
-     * ( begin auto-generated from pmouseY.xml )
-     * <p>
-     * The system variable <b>pmouseY</b> always contains the vertical position
-     * of the mouse in the frame previous to the current frame. More detailed
-     * information about how <b>pmouseY</b> is updated inside of <b>draw()</b>
-     * and mouse events is explained in the reference for <b>pmouseX</b>.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:mouse
-     * @see PApplet#mouseX
-     * @see PApplet#mouseY
-     * @see PApplet#pmouseX
-     * @see PApplet#mousePressed
-     * @see PApplet#mousePressed()
-     * @see PApplet#mouseReleased()
-     * @see PApplet#mouseClicked()
-     * @see PApplet#mouseMoved()
-     * @see PApplet#mouseDragged()
-     * @see PApplet#mouseButton
-     * @see PApplet#mouseWheel(MouseEvent)
-     */
-    public int pmouseY;
-
-    /**
-     * Previous mouseX/Y for the draw loop, separated out because this is
-     * separate from the pmouseX/Y when inside the mouse event handlers.
-     * See emouseX/Y for an explanation.
-     */
-    protected int dmouseX, dmouseY;
-
-    /**
-     * The pmouseX/Y for the event handlers (mousePressed(), mouseDragged() etc)
-     * these are different because mouse events are queued to the end of
-     * draw, so the previous position has to be updated on each event,
-     * as opposed to the pmouseX/Y that's used inside draw, which is expected
-     * to be updated once per trip through draw().
-     */
-    protected int emouseX, emouseY;
-
-    /**
-     * Used to set pmouseX/Y to mouseX/Y the first time mouseX/Y are used,
-     * otherwise pmouseX/Y are always zero, causing a nasty jump.
-     * <p>
-     * Just using (frameCount == 0) won't work since mouseXxxxx()
-     * may not be called until a couple frames into things.
-     * <p>
-     *
-     * @deprecated Please refrain from using this variable, it will be removed
-     * from future releases of Processing because it cannot be used consistently
-     * across platforms and input methods.
-     */
-    @Deprecated
-    public boolean firstMouse = true;
-
-    /**
-     * ( begin auto-generated from mouseButton.xml )
-     * <p>
-     * Processing automatically tracks if the mouse button is pressed and which
-     * button is pressed. The value of the system variable <b>mouseButton</b>
-     * is either <b>LEFT</b>, <b>RIGHT</b>, or <b>CENTER</b> depending on which
-     * button is pressed.
-     * <p>
-     * ( end auto-generated )
-     *
-     * <h3>Advanced:</h3>
-     * <p>
-     * If running on Mac OS, a ctrl-click will be interpreted as the right-hand
-     * mouse button (unlike Java, which reports it as the left mouse).
-     *
-     * @webref input:mouse
-     * @see PApplet#mouseX
-     * @see PApplet#mouseY
-     * @see PApplet#pmouseX
-     * @see PApplet#pmouseY
-     * @see PApplet#mousePressed
-     * @see PApplet#mousePressed()
-     * @see PApplet#mouseReleased()
-     * @see PApplet#mouseClicked()
-     * @see PApplet#mouseMoved()
-     * @see PApplet#mouseDragged()
-     * @see PApplet#mouseWheel(MouseEvent)
-     */
-    public int mouseButton;
-
-    /**
-     * ( begin auto-generated from mousePressed_var.xml )
-     * <p>
-     * Variable storing if a mouse button is pressed. The value of the system
-     * variable <b>mousePressed</b> is true if a mouse button is pressed and
-     * false if a button is not pressed.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:mouse
-     * @see PApplet#mouseX
-     * @see PApplet#mouseY
-     * @see PApplet#pmouseX
-     * @see PApplet#pmouseY
-     * @see PApplet#mousePressed()
-     * @see PApplet#mouseReleased()
-     * @see PApplet#mouseClicked()
-     * @see PApplet#mouseMoved()
-     * @see PApplet#mouseDragged()
-     * @see PApplet#mouseButton
-     * @see PApplet#mouseWheel(MouseEvent)
-     */
-    public boolean mousePressed;
-
-    // MACOSX: CTRL + Left Mouse is converted to Right Mouse. This boolean keeps
-    // track of whether the conversion happened on PRESS, because we should report
-    // the same button during DRAG and on RELEASE, even though CTRL might have
-    // been released already. Otherwise the events are inconsistent, e.g.
-    // Left Pressed - Left Drag - CTRL Pressed - Right Drag - Right Released.
-    // See: https://github.com/processing/processing/issues/5672
-    private boolean macosxLeftButtonWithCtrlPressed;
-
-    /**
-     * @deprecated Use a mouse event handler that passes an event instead.
-     */
-    @Deprecated
-    public MouseEvent mouseEvent;
-
-    /**
-     * ( begin auto-generated from key.xml )
-     * <p>
-     * The system variable <b>key</b> always contains the value of the most
-     * recent key on the keyboard that was used (either pressed or released).
-     * <br/> <br/>
-     * For non-ASCII keys, use the <b>keyCode</b> variable. The keys included
-     * in the ASCII specification (BACKSPACE, TAB, ENTER, RETURN, ESC, and
-     * DELETE) do not require checking to see if they key is coded, and you
-     * should simply use the <b>key</b> variable instead of <b>keyCode</b> If
-     * you're making cross-platform projects, note that the ENTER key is
-     * commonly used on PCs and Unix and the RETURN key is used instead on
-     * Macintosh. Check for both ENTER and RETURN to make sure your program
-     * will work for all platforms.
-     * <p>
-     * ( end auto-generated )
-     *
-     * <h3>Advanced</h3>
-     * <p>
-     * Last key pressed.
-     * <p>
-     * If it's a coded key, i.e. UP/DOWN/CTRL/SHIFT/ALT,
-     * this will be set to CODED (0xffff or 65535).
-     *
-     * @webref input:keyboard
-     * @see PApplet#keyCode
-     * @see PApplet#keyPressed
-     * @see PApplet#keyPressed()
-     * @see PApplet#keyReleased()
-     */
-    public char key;
-
-    /**
-     * ( begin auto-generated from keyCode.xml )
-     * <p>
-     * The variable <b>keyCode</b> is used to detect special keys such as the
-     * UP, DOWN, LEFT, RIGHT arrow keys and ALT, CONTROL, SHIFT. When checking
-     * for these keys, it's first necessary to check and see if the key is
-     * coded. This is done with the conditional "if (key == CODED)" as shown in
-     * the example.
-     * <br/> <br/>
-     * The keys included in the ASCII specification (BACKSPACE, TAB, ENTER,
-     * RETURN, ESC, and DELETE) do not require checking to see if they key is
-     * coded, and you should simply use the <b>key</b> variable instead of
-     * <b>keyCode</b> If you're making cross-platform projects, note that the
-     * ENTER key is commonly used on PCs and Unix and the RETURN key is used
-     * instead on Macintosh. Check for both ENTER and RETURN to make sure your
-     * program will work for all platforms.
-     * <br/> <br/>
-     * For users familiar with Java, the values for UP and DOWN are simply
-     * shorter versions of Java's KeyEvent.VK_UP and KeyEvent.VK_DOWN. Other
-     * keyCode values can be found in the Java <a
-     * href="http://download.oracle.com/javase/6/docs/api/java/awt/event/KeyEvent.html">KeyEvent</a> reference.
-     * <p>
-     * ( end auto-generated )
-     *
-     * <h3>Advanced</h3>
-     * When "key" is set to CODED, this will contain a Java key code.
-     * <p>
-     * For the arrow keys, keyCode will be one of UP, DOWN, LEFT and RIGHT.
-     * Also available are ALT, CONTROL and SHIFT. A full set of constants
-     * can be obtained from java.awt.event.KeyEvent, from the VK_XXXX variables.
-     *
-     * @webref input:keyboard
-     * @see PApplet#key
-     * @see PApplet#keyPressed
-     * @see PApplet#keyPressed()
-     * @see PApplet#keyReleased()
-     */
-    public int keyCode;
-
-    /**
-     * ( begin auto-generated from keyPressed_var.xml )
-     * <p>
-     * The boolean system variable <b>keyPressed</b> is <b>true</b> if any key
-     * is pressed and <b>false</b> if no keys are pressed.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:keyboard
-     * @see PApplet#key
-     * @see PApplet#keyCode
-     * @see PApplet#keyPressed()
-     * @see PApplet#keyReleased()
-     */
-    public boolean keyPressed;
-    List<Long> pressedKeys = new ArrayList<>(6);
-
-    /**
-     * ( begin auto-generated from focused.xml )
-     * <p>
-     * Confirms if a Processing program is "focused", meaning that it is active
-     * and will accept input from mouse or keyboard. This variable is "true" if
-     * it is focused and "false" if not. This variable is often used when you
-     * want to warn people they need to click on or roll over an applet before
-     * it will work.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref environment
-     */
-    public boolean focused = false;
-
-//  /**
+    //  /**
 //   * Confirms if a Processing program is running inside a web browser. This
 //   * variable is "true" if the program is online and "false" if not.
 //   */
@@ -699,35 +325,7 @@ public class PApplet implements PConstants {
 //  // case this won't work at all. If you want this feature, you can check
 //  // whether getAppletContext() returns null.
 
-    /**
-     * Time in milliseconds when the applet was started.
-     * <p>
-     * Used by the millis() function.
-     */
-    long millisOffset = System.currentTimeMillis();
-
-    /**
-     * ( begin auto-generated from frameRate_var.xml )
-     * <p>
-     * The system variable <b>frameRate</b> contains the approximate frame rate
-     * of the software as it executes. The initial value is 10 fps and is
-     * updated with each frame. The value is averaged (integrated) over several
-     * frames. As such, this value won't be valid until after 5-10 frames.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref environment
-     * @see PApplet#frameRate(float)
-     * @see PApplet#frameCount
-     */
-    public float frameRate = 60;
-
     protected boolean looping = true;
-
-    /**
-     * flag set to true when a redraw is asked for by the user
-     */
-    protected boolean redraw = true;
 
     /**
      * ( begin auto-generated from frameCount.xml )
@@ -739,20 +337,8 @@ public class PApplet implements PConstants {
      * ( end auto-generated )
      *
      * @webref environment
-     * @see PApplet#frameRate(float)
-     * @see PApplet#frameRate
      */
     public int frameCount;
-
-    /**
-     * true if the sketch has stopped permanently.
-     */
-    public volatile boolean finished;
-
-    /**
-     * used by the UncaughtExceptionHandler, so has to be static
-     */
-    static Throwable uncaughtThrowable;
 
     // public, but undocumented.. removing for 3.0a5
 //  /**
@@ -761,63 +347,6 @@ public class PApplet implements PConstants {
 //  public volatile boolean paused;
 
     // messages to send if attached as an external vm
-
-    /**
-     * Position of the upper-lefthand corner of the editor window
-     * that launched this applet.
-     */
-    static public final String ARGS_EDITOR_LOCATION = "--editor-location";
-
-    static public final String ARGS_EXTERNAL = "--external";
-
-    /**
-     * Location for where to position the applet window on screen.
-     * <p>
-     * This is used by the editor to when saving the previous applet
-     * location, or could be used by other classes to launch at a
-     * specific position on-screen.
-     */
-    static public final String ARGS_LOCATION = "--location";
-
-    /**
-     * Used by the PDE to suggest a display (set in prefs, passed on Run)
-     */
-    static public final String ARGS_DISPLAY = "--display";
-
-//  static public final String ARGS_SPAN_DISPLAYS = "--span";
-
-    static public final String ARGS_WINDOW_COLOR = "--window-color";
-
-    static public final String ARGS_PRESENT = "--present";
-
-    static public final String ARGS_STOP_COLOR = "--stop-color";
-
-    static public final String ARGS_HIDE_STOP = "--hide-stop";
-
-    /**
-     * Allows the user or PdeEditor to set a specific sketch folder path.
-     * <p>
-     * Used by PdeEditor to pass in the location where saveFrame()
-     * and all that stuff should write things.
-     */
-    static public final String ARGS_SKETCH_FOLDER = "--sketch-path";
-
-    static public final String ARGS_DENSITY = "--density";
-
-    /**
-     * When run externally to a PdeEditor,
-     * this is sent by the sketch when it quits.
-     */
-    static public final String EXTERNAL_STOP = "__STOP__";
-
-    /**
-     * When run externally to a PDE Editor, this is sent by the applet
-     * whenever the window is moved.
-     * <p>
-     * This is used so that the editor can re-open the sketch window
-     * in the same position as the user last left it.
-     */
-    static public final String EXTERNAL_MOVE = "__MOVE__";
 
     /**
      * true if this sketch is being run by the PDE
@@ -904,51 +433,21 @@ public class PApplet implements PConstants {
 
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-    String renderer = JAVA2D;
+    String renderer = P2D;
     //  int quality = 2;
     int smooth = 1;  // default smoothing (whatever that means for the renderer)
 
-    boolean fullScreen;
-    int display = -1;  // use default
-    GraphicsDevice[] displayDevices;
     // Unlike the others above, needs to be public to support
     // the pixelWidth and pixelHeight fields.
     public int pixelDensity = 1;
     int suggestedDensity = -1;
 
-    boolean present;
-
     String outputPath;
-    OutputStream outputStream;
 
     // Background default needs to be different from the default value in
     // PGraphics.backgroundColor, otherwise size(100, 100) bg spills over.
     // https://github.com/processing/processing/issues/2297
     int windowColor = 0xffDDDDDD;
-
-    void handleSettings() {
-        settings();
-    }
-
-    /**
-     * ( begin auto-generated from settings.xml )
-     * <p>
-     * Description to come...
-     * <p>
-     * ( end auto-generated )
-     * <p>
-     * Override this method to call size() when not using the PDE.
-     *
-     * @webref environment
-     * @see PApplet#fullScreen()
-     * @see PApplet#setup()
-     * @see PApplet#size(int, int)
-     * @see PApplet#smooth()
-     */
-    public void settings() {
-        // is this necessary? (doesn't appear to be, so removing)
-        //size(DEFAULT_WIDTH, DEFAULT_HEIGHT, JAVA2D);
-    }
 
     final public int sketchWidth() {
         return width;
@@ -978,12 +477,7 @@ public class PApplet implements PConstants {
         return smooth;
     }
 
-    final public boolean sketchFullScreen() {
-        //return false;
-        return fullScreen;
-    }
-
-//  // Could be named 'screen' instead of display since it's the people using
+    //  // Could be named 'screen' instead of display since it's the people using
 //  // full screen who will be looking for it. On the other hand, screenX/Y/Z
 //  // makes things confusing, and if 'displayIndex' exists...
 //  public boolean sketchSpanDisplays() {
@@ -991,19 +485,9 @@ public class PApplet implements PConstants {
 //    return spanDisplays;
 //  }
 
-    // Numbered from 1, SPAN (0) means all displays, -1 means the default display
-    final public int sketchDisplay() {
-        return display;
-    }
-
     final public String sketchOutputPath() {
         //return null;
         return outputPath;
-    }
-
-    final public OutputStream sketchOutputStream() {
-        //return null;
-        return outputStream;
     }
 
     final public int sketchWindowColor() {
@@ -1015,117 +499,6 @@ public class PApplet implements PConstants {
     }
 
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-
-    /**
-     * ( begin auto-generated from displayDensity.xml )
-     * <p>
-     * This function returns the number "2" if the screen is a high-density
-     * screen (called a Retina display on OS X or high-dpi on Windows and Linux)
-     * and a "1" if not. This information is useful for a program to adapt to
-     * run at double the pixel density on a screen that supports it.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref environment
-     * @see PApplet#pixelDensity(int)
-     * @see PApplet#size(int, int)
-     */
-    public int displayDensity() {
-        if (display != SPAN && (fullScreen || present)) {
-            return displayDensity(display);
-        }
-        // walk through all displays, use 2 if any display is 2
-        for (int i = 0; i < displayDevices.length; i++) {
-            if (displayDensity(i + 1) == 2) {
-                return 2;
-            }
-        }
-        // If nobody's density is 2 then everyone is 1
-        return 1;
-    }
-
-    /**
-     * @param display the display number to check
-     */
-    public int displayDensity(int display) {
-        if (PApplet.platform == PConstants.MACOSX) {
-            // This should probably be reset each time there's a display change.
-            // A 5-minute search didn't turn up any such event in the Java 7 API.
-            // Also, should we use the Toolkit associated with the editor window?
-            final String javaVendor = System.getProperty("java.vendor");
-            if (javaVendor.contains("Oracle")) {
-                GraphicsDevice device;
-                GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
-
-                if (display == -1) {
-                    device = env.getDefaultScreenDevice();
-
-                } else if (display == SPAN) {
-                    throw new RuntimeException("displayDensity() only works with specific display numbers");
-
-                } else {
-                    GraphicsDevice[] devices = env.getScreenDevices();
-                    if (display > 0 && display <= devices.length) {
-                        device = devices[display - 1];
-                    } else {
-                        if (devices.length == 1) {
-                            System.err.println("Only one display is currently known, use displayDensity(1).");
-                        } else {
-                            System.err.format("Your displays are numbered %d through %d, " +
-                                                      "pass one of those numbers to displayDensity()%n", 1, devices.length);
-                        }
-                        throw new RuntimeException("Display " + display + " does not exist.");
-                    }
-                }
-
-                try {
-                    Field field = device.getClass().getDeclaredField("scale");
-                    if (field != null) {
-                        field.setAccessible(true);
-                        Object scale = field.get(device);
-
-                        if (scale instanceof Integer && ((Integer) scale).intValue() == 2) {
-                            return 2;
-                        }
-                    }
-                } catch (Exception ignore) {
-                }
-            }
-        } else if (PApplet.platform == PConstants.WINDOWS ||
-                PApplet.platform == PConstants.LINUX) {
-            if (suggestedDensity == -1) {
-                // TODO: detect and return DPI scaling using JNA; Windows has
-                //   a system-wide value, not sure how it works on Linux
-                return 1;
-            } else if (suggestedDensity == 1 || suggestedDensity == 2) {
-                return suggestedDensity;
-            }
-        }
-        return 1;
-    }
-
-    /**
-     * @param density 1 or 2
-     * @webref environment
-     * @see PApplet#pixelWidth
-     * @see PApplet#pixelHeight
-     */
-    public void pixelDensity(int density) {
-        //println(density + " " + this.pixelDensity);
-        if (density != this.pixelDensity) {
-            if (density != 1 && density != 2) {
-                throw new RuntimeException("pixelDensity() can only be 1 or 2");
-            }
-            if (!FX2D.equals(renderer) && density == 2 && displayDensity() == 1) {
-                // FX has its own check in PSurfaceFX
-                // Don't throw exception because the sketch should still work
-                System.err.println("pixelDensity(2) is not available for this display");
-                this.pixelDensity = 1;
-            } else {
-                this.pixelDensity = density;
-            }
-        }
-    }
 
     /**
      * Called by PSurface objects to set the width and height variables,
@@ -1565,68 +938,6 @@ public class PApplet implements PConstants {
 
     //////////////////////////////////////////////////////////////
 
-    /**
-     * ( begin auto-generated from setup.xml )
-     * <p>
-     * The <b>setup()</b> function is called once when the program starts. It's
-     * used to define initial
-     * enviroment properties such as screen size and background color and to
-     * load media such as images
-     * and fonts as the program starts. There can only be one <b>setup()</b>
-     * function for each program and
-     * it shouldn't be called again after its initial execution. Note:
-     * Variables declared within
-     * <b>setup()</b> are not accessible within other functions, including
-     * <b>draw()</b>.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref structure
-     * @usage web_application
-     * @see PApplet#size(int, int)
-     * @see PApplet#loop()
-     * @see PApplet#noLoop()
-     * @see PApplet#draw()
-     */
-    public void setup() {
-    }
-
-    /**
-     * ( begin auto-generated from draw.xml )
-     * <p>
-     * Called directly after <b>setup()</b> and continuously executes the lines
-     * of code contained inside its block until the program is stopped or
-     * <b>noLoop()</b> is called. The <b>draw()</b> function is called
-     * automatically and should never be called explicitly. It should always be
-     * controlled with <b>noLoop()</b>, <b>redraw()</b> and <b>loop()</b>.
-     * After <b>noLoop()</b> stops the code in <b>draw()</b> from executing,
-     * <b>redraw()</b> causes the code inside <b>draw()</b> to execute once and
-     * <b>loop()</b> will causes the code inside <b>draw()</b> to execute
-     * continuously again. The number of times <b>draw()</b> executes in each
-     * second may be controlled with <b>frameRate()</b> function.
-     * There can only be one <b>draw()</b> function for each sketch
-     * and <b>draw()</b> must exist if you want the code to run continuously or
-     * to process events such as <b>mousePressed()</b>. Sometimes, you might
-     * have an empty call to <b>draw()</b> in your program as shown in the
-     * above example.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref structure
-     * @usage web_application
-     * @see PApplet#setup()
-     * @see PApplet#loop()
-     * @see PApplet#noLoop()
-     * @see PApplet#redraw()
-     * @see PApplet#frameRate(float)
-     * @see PGraphics#background(float, float, float, float)
-     */
-    public void draw() {
-        // if no draw method, then shut things down
-        //System.out.println("no draw method, goodbye");
-        finished = true;
-    }
-
     //////////////////////////////////////////////////////////////
 
 
@@ -1641,42 +952,6 @@ public class PApplet implements PConstants {
     }
   }
   */
-
-    /**
-     * ( begin auto-generated from fullScreen.xml )
-     * <p>
-     * Description to come...
-     * <p>
-     * ( end auto-generated )
-     *
-     * @param renderer the renderer to use, e.g. P2D, P3D, JAVA2D (default)
-     * @webref environment
-     * @see PApplet#settings()
-     * @see PApplet#setup()
-     * @see PApplet#size(int, int)
-     * @see PApplet#smooth()
-     */
-    public void fullScreen(String renderer) {
-        if (!fullScreen ||
-                !renderer.equals(this.renderer)) {
-            this.fullScreen = true;
-            this.renderer = renderer;
-        }
-    }
-
-    /**
-     * @param display the screen to run the sketch on (1, 2, 3, etc. or on multiple screens using SPAN)
-     */
-
-    public void fullScreen(String renderer, int display) {
-        if (!fullScreen ||
-                !renderer.equals(this.renderer) ||
-                display != this.display) {
-            this.fullScreen = true;
-            this.renderer = renderer;
-            this.display = display;
-        }
-    }
 
     /**
      * ( begin auto-generated from size.xml )
@@ -1750,9 +1025,6 @@ public class PApplet implements PConstants {
      * @webref environment
      * @see PApplet#width
      * @see PApplet#height
-     * @see PApplet#setup()
-     * @see PApplet#settings()
-     * @see PApplet#fullScreen()
      */
     public void size(int width, int height) {
         // Check to make sure the width/height have actually changed. It's ok to
@@ -1858,10 +1130,6 @@ public class PApplet implements PConstants {
 //      throw new RendererChangeException();
 //      */
 //    }
-    }
-
-    public PGraphics createGraphics(int w, int h) {
-        return createGraphics(w, h, JAVA2D);
     }
 
     /**
@@ -2058,178 +1326,12 @@ public class PApplet implements PConstants {
 
     //////////////////////////////////////////////////////////////
 
-    protected boolean insideDraw;
-
-    /**
-     * Last time in nanoseconds that frameRate was checked
-     */
-    protected long frameRateLastNanos = 0;
-
-    public void handleDraw() {
-        //debug("handleDraw() " + g + " " + looping + " " + redraw + " valid:" + this.isValid() + " visible:" + this.isVisible());
-
-        // canDraw = g != null && (looping || redraw);
-        if (g == null) {
-            return;
-        }
-        if (!looping && !redraw) {
-            return;
-        }
-//    System.out.println("looping/redraw = " + looping + " " + redraw);
-
-        // no longer in use by any of our renderers
-//    if (!g.canDraw()) {
-//      debug("g.canDraw() is false");
-//      // Don't draw if the renderer is not yet ready.
-//      // (e.g. OpenGL has to wait for a peer to be on screen)
-//      return;
-//    }
-
-        // Store the quality setting in case it's changed during draw and the
-        // drawing context needs to be re-built before the next frame.
-//    int pquality = g.smooth;
-
-        if (insideDraw) {
-            System.err.println("handleDraw() called before finishing");
-            System.exit(1);
-        }
-
-        insideDraw = true;
-        g.beginDraw();
-
-        // update the current frameRate
-
-        // Calculate frameRate through average frame times, not average fps, e.g.:
-        //
-        // Alternating 2 ms and 20 ms frames (JavaFX or JOGL sometimes does this)
-        // is around 90.91 fps (two frames in 22 ms, one frame 11 ms).
-        //
-        // However, averaging fps gives us: (500 fps + 50 fps) / 2 = 275 fps.
-        // This is because we had 500 fps for 2 ms and 50 fps for 20 ms, but we
-        // counted them with equal weight.
-        //
-        // If we average frame times instead, we get the right result:
-        // (2 ms + 20 ms) / 2 = 11 ms per frame, which is 1000/11 = 90.91 fps.
-        //
-        // The counter below uses exponential moving average. To do the
-        // calculation, we first convert the accumulated frame rate to average
-        // frame time, then calculate the exponential moving average, and then
-        // convert the average frame time back to frame rate.
-
-        //println("Calling draw()");
-        draw();
-        //println("Done calling draw()");
-
-        // (only do this once draw() has run, not just setup())
-        g.endDraw();
-
-//    if (pquality != g.smooth) {
-//      surface.setSmooth(g.smooth);
-//    }
-
-        insideDraw = false;
-    }
-
-//  /** Not official API, not guaranteed to work in the future. */
+    //  /** Not official API, not guaranteed to work in the future. */
 //  public boolean canDraw() {
 //    return g != null && (looping || redraw);
 //  }
 
     //////////////////////////////////////////////////////////////
-
-    /**
-     * ( begin auto-generated from redraw.xml )
-     * <p>
-     * Executes the code within <b>draw()</b> one time. This functions allows
-     * the program to update the display window only when necessary, for
-     * example when an event registered by <b>mousePressed()</b> or
-     * <b>keyPressed()</b> occurs.
-     * <br/><br/> structuring a program, it only makes sense to call redraw()
-     * within events such as <b>mousePressed()</b>. This is because
-     * <b>redraw()</b> does not run <b>draw()</b> immediately (it only sets a
-     * flag that indicates an update is needed).
-     * <br/><br/> <b>redraw()</b> within <b>draw()</b> has no effect because
-     * <b>draw()</b> is continuously called anyway.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref structure
-     * @usage web_application
-     * @see PApplet#draw()
-     * @see PApplet#loop()
-     * @see PApplet#noLoop()
-     * @see PApplet#frameRate(float)
-     */
-    synchronized public void redraw() {
-        if (!looping) {
-            redraw = true;
-//      if (thread != null) {
-//        // wake from sleep (necessary otherwise it'll be
-//        // up to 10 seconds before update)
-//        if (CRUSTY_THREADS) {
-//          thread.interrupt();
-//        } else {
-//          synchronized (blocker) {
-//            blocker.notifyAll();
-//          }
-//        }
-//      }
-        }
-    }
-
-    /**
-     * ( begin auto-generated from loop.xml )
-     * <p>
-     * Causes Processing to continuously execute the code within <b>draw()</b>.
-     * If <b>noLoop()</b> is called, the code in <b>draw()</b> stops executing.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref structure
-     * @usage web_application
-     * @see PApplet#noLoop()
-     * @see PApplet#redraw()
-     * @see PApplet#draw()
-     */
-    synchronized public void loop() {
-        if (!looping) {
-            looping = true;
-        }
-    }
-
-    /**
-     * ( begin auto-generated from noLoop.xml )
-     * <p>
-     * Stops Processing from continuously executing the code within
-     * <b>draw()</b>. If <b>loop()</b> is called, the code in <b>draw()</b>
-     * begin to run continuously again. If using <b>noLoop()</b> in
-     * <b>setup()</b>, it should be the last line inside the block.
-     * <br/> <br/>
-     * When <b>noLoop()</b> is used, it's not possible to manipulate or access
-     * the screen inside event handling functions such as <b>mousePressed()</b>
-     * or <b>keyPressed()</b>. Instead, use those functions to call
-     * <b>redraw()</b> or <b>loop()</b>, which will run <b>draw()</b>, which
-     * can update the screen properly. This means that when noLoop() has been
-     * called, no drawing can happen, and functions like saveFrame() or
-     * loadPixels() may not be used.
-     * <br/> <br/>
-     * Note that if the sketch is resized, <b>redraw()</b> will be called to
-     * update the sketch, even after <b>noLoop()</b> has been specified.
-     * Otherwise, the sketch would enter an odd state until <b>loop()</b> was called.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref structure
-     * @usage web_application
-     * @see PApplet#loop()
-     * @see PApplet#redraw()
-     * @see PApplet#draw()
-     */
-    synchronized public void noLoop() {
-        if (looping) {
-            looping = false;
-        }
-    }
 
     public boolean isLooping() {
         return looping;
@@ -2237,319 +1339,7 @@ public class PApplet implements PConstants {
 
     //////////////////////////////////////////////////////////////
 
-    /**
-     * ( begin auto-generated from mousePressed.xml )
-     * <p>
-     * The <b>mousePressed()</b> function is called once after every time a
-     * mouse button is pressed. The <b>mouseButton</b> variable (see the
-     * related reference entry) can be used to determine which button has been pressed.
-     * <p>
-     * ( end auto-generated )
-     * <h3>Advanced</h3>
-     * <p>
-     * If you must, use
-     * int button = mouseEvent.getButton();
-     * to figure out which button was clicked. It will be one of:
-     * MouseEvent.BUTTON1, MouseEvent.BUTTON2, MouseEvent.BUTTON3
-     * Note, however, that this is completely inconsistent across
-     * platforms.
-     *
-     * @webref input:mouse
-     * @see PApplet#mouseX
-     * @see PApplet#mouseY
-     * @see PApplet#pmouseX
-     * @see PApplet#pmouseY
-     * @see PApplet#mousePressed
-     * @see PApplet#mouseReleased()
-     * @see PApplet#mouseClicked()
-     * @see PApplet#mouseMoved()
-     * @see PApplet#mouseDragged()
-     * @see PApplet#mouseButton
-     * @see PApplet#mouseWheel(MouseEvent)
-     */
-    public void mousePressed() {
-    }
-
-    public void mousePressed(MouseEvent event) {
-        mousePressed();
-    }
-
-    /**
-     * ( begin auto-generated from mouseReleased.xml )
-     * <p>
-     * The <b>mouseReleased()</b> function is called every time a mouse button
-     * is released.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:mouse
-     * @see PApplet#mouseX
-     * @see PApplet#mouseY
-     * @see PApplet#pmouseX
-     * @see PApplet#pmouseY
-     * @see PApplet#mousePressed
-     * @see PApplet#mousePressed()
-     * @see PApplet#mouseClicked()
-     * @see PApplet#mouseMoved()
-     * @see PApplet#mouseDragged()
-     * @see PApplet#mouseButton
-     * @see PApplet#mouseWheel(MouseEvent)
-     */
-    public void mouseReleased() {
-    }
-
-    public void mouseReleased(MouseEvent event) {
-        mouseReleased();
-    }
-
-    /**
-     * ( begin auto-generated from mouseClicked.xml )
-     * <p>
-     * The <b>mouseClicked()</b> function is called once after a mouse button
-     * has been pressed and then released.
-     * <p>
-     * ( end auto-generated )
-     * <h3>Advanced</h3>
-     * When the mouse is clicked, mousePressed() will be called,
-     * then mouseReleased(), then mouseClicked(). Note that
-     * mousePressed is already false inside of mouseClicked().
-     *
-     * @webref input:mouse
-     * @see PApplet#mouseX
-     * @see PApplet#mouseY
-     * @see PApplet#pmouseX
-     * @see PApplet#pmouseY
-     * @see PApplet#mousePressed
-     * @see PApplet#mousePressed()
-     * @see PApplet#mouseReleased()
-     * @see PApplet#mouseMoved()
-     * @see PApplet#mouseDragged()
-     * @see PApplet#mouseButton
-     * @see PApplet#mouseWheel(MouseEvent)
-     */
-    public void mouseClicked() {
-    }
-
-    public void mouseClicked(MouseEvent event) {
-        mouseClicked();
-    }
-
-    /**
-     * ( begin auto-generated from mouseDragged.xml )
-     * <p>
-     * The <b>mouseDragged()</b> function is called once every time the mouse
-     * moves and a mouse button is pressed.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:mouse
-     * @see PApplet#mouseX
-     * @see PApplet#mouseY
-     * @see PApplet#pmouseX
-     * @see PApplet#pmouseY
-     * @see PApplet#mousePressed
-     * @see PApplet#mousePressed()
-     * @see PApplet#mouseReleased()
-     * @see PApplet#mouseClicked()
-     * @see PApplet#mouseMoved()
-     * @see PApplet#mouseButton
-     * @see PApplet#mouseWheel(MouseEvent)
-     */
-    public void mouseDragged() {
-    }
-
-    public void mouseDragged(MouseEvent event) {
-        mouseDragged();
-    }
-
-    /**
-     * ( begin auto-generated from mouseMoved.xml )
-     * <p>
-     * The <b>mouseMoved()</b> function is called every time the mouse moves
-     * and a mouse button is not pressed.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:mouse
-     * @see PApplet#mouseX
-     * @see PApplet#mouseY
-     * @see PApplet#pmouseX
-     * @see PApplet#pmouseY
-     * @see PApplet#mousePressed
-     * @see PApplet#mousePressed()
-     * @see PApplet#mouseReleased()
-     * @see PApplet#mouseClicked()
-     * @see PApplet#mouseDragged()
-     * @see PApplet#mouseButton
-     * @see PApplet#mouseWheel(MouseEvent)
-     */
-    public void mouseMoved() {
-    }
-
-    public void mouseMoved(MouseEvent event) {
-        mouseMoved();
-    }
-
-    public void mouseEntered() {
-    }
-
-    public void mouseEntered(MouseEvent event) {
-        mouseEntered();
-    }
-
-    public void mouseExited() {
-    }
-
-    public void mouseExited(MouseEvent event) {
-        mouseExited();
-    }
-
-    /**
-     * @nowebref
-     */
-    public void mouseWheel() {
-    }
-
-    /**
-     * The event.getAmount() method returns negative values if the mouse wheel
-     * if rotated up or away from the user and positive in the other direction.
-     * On OS X with "natural" scrolling enabled, the values are opposite.
-     *
-     * @param event the MouseEvent
-     * @webref input:mouse
-     * @see PApplet#mouseX
-     * @see PApplet#mouseY
-     * @see PApplet#pmouseX
-     * @see PApplet#pmouseY
-     * @see PApplet#mousePressed
-     * @see PApplet#mousePressed()
-     * @see PApplet#mouseReleased()
-     * @see PApplet#mouseClicked()
-     * @see PApplet#mouseMoved()
-     * @see PApplet#mouseDragged()
-     * @see PApplet#mouseButton
-     */
-    public void mouseWheel(MouseEvent event) {
-        mouseWheel();
-    }
-
     //////////////////////////////////////////////////////////////
-
-    /**
-     * ( begin auto-generated from keyPressed.xml )
-     * <p>
-     * The <b>keyPressed()</b> function is called once every time a key is
-     * pressed. The key that was pressed is stored in the <b>key</b> variable.
-     * <br/> <br/>
-     * For non-ASCII keys, use the <b>keyCode</b> variable. The keys included
-     * in the ASCII specification (BACKSPACE, TAB, ENTER, RETURN, ESC, and
-     * DELETE) do not require checking to see if they key is coded, and you
-     * should simply use the <b>key</b> variable instead of <b>keyCode</b> If
-     * you're making cross-platform projects, note that the ENTER key is
-     * commonly used on PCs and Unix and the RETURN key is used instead on
-     * Macintosh. Check for both ENTER and RETURN to make sure your program
-     * will work for all platforms.
-     * <br/> <br/>
-     * Because of how operating systems handle key repeats, holding down a key
-     * may cause multiple calls to keyPressed() (and keyReleased() as well).
-     * The rate of repeat is set by the operating system and how each computer
-     * is configured.
-     * <p>
-     * ( end auto-generated )
-     * <h3>Advanced</h3>
-     * <p>
-     * Called each time a single key on the keyboard is pressed.
-     * Because of how operating systems handle key repeats, holding
-     * down a key will cause multiple calls to keyPressed(), because
-     * the OS repeat takes over.
-     * <p>
-     * Examples for key handling:
-     * (Tested on Windows XP, please notify if different on other
-     * platforms, I have a feeling Mac OS and Linux may do otherwise)
-     * <PRE>
-     * 1. Pressing 'a' on the keyboard:
-     * keyPressed  with key == 'a' and keyCode == 'A'
-     * keyTyped    with key == 'a' and keyCode ==  0
-     * keyReleased with key == 'a' and keyCode == 'A'
-     * <p>
-     * 2. Pressing 'A' on the keyboard:
-     * keyPressed  with key == 'A' and keyCode == 'A'
-     * keyTyped    with key == 'A' and keyCode ==  0
-     * keyReleased with key == 'A' and keyCode == 'A'
-     * <p>
-     * 3. Pressing 'shift', then 'a' on the keyboard (caps lock is off):
-     * keyPressed  with key == CODED and keyCode == SHIFT
-     * keyPressed  with key == 'A'   and keyCode == 'A'
-     * keyTyped    with key == 'A'   and keyCode == 0
-     * keyReleased with key == 'A'   and keyCode == 'A'
-     * keyReleased with key == CODED and keyCode == SHIFT
-     * <p>
-     * 4. Holding down the 'a' key.
-     * The following will happen several times,
-     * depending on your machine's "key repeat rate" settings:
-     * keyPressed  with key == 'a' and keyCode == 'A'
-     * keyTyped    with key == 'a' and keyCode ==  0
-     * When you finally let go, you'll get:
-     * keyReleased with key == 'a' and keyCode == 'A'
-     * <p>
-     * 5. Pressing and releasing the 'shift' key
-     * keyPressed  with key == CODED and keyCode == SHIFT
-     * keyReleased with key == CODED and keyCode == SHIFT
-     * (note there is no keyTyped)
-     * <p>
-     * 6. Pressing the tab key in an applet with Java 1.4 will
-     * normally do nothing, but PApplet dynamically shuts
-     * this behavior off if Java 1.4 is in use (tested 1.4.2_05 Windows).
-     * Java 1.1 (Microsoft VM) passes the TAB key through normally.
-     * Not tested on other platforms or for 1.3.
-     * </PRE>
-     *
-     * @webref input:keyboard
-     * @see PApplet#key
-     * @see PApplet#keyCode
-     * @see PApplet#keyPressed
-     * @see PApplet#keyReleased()
-     */
-    public void keyPressed() {
-    }
-
-    /**
-     * ( begin auto-generated from keyReleased.xml )
-     * <p>
-     * The <b>keyReleased()</b> function is called once every time a key is
-     * released. The key that was released will be stored in the <b>key</b>
-     * variable. See <b>key</b> and <b>keyReleased</b> for more information.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:keyboard
-     * @see PApplet#key
-     * @see PApplet#keyCode
-     * @see PApplet#keyPressed
-     * @see PApplet#keyPressed()
-     */
-    public void keyReleased() {
-    }
-
-    /**
-     * ( begin auto-generated from keyTyped.xml )
-     * <p>
-     * The <b>keyTyped()</b> function is called once every time a key is
-     * pressed, but action keys such as Ctrl, Shift, and Alt are ignored.
-     * Because of how operating systems handle key repeats, holding down a key
-     * will cause multiple calls to <b>keyTyped()</b>, the rate is set by the
-     * operating system and how each computer is configured.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:keyboard
-     * @see PApplet#keyPressed
-     * @see PApplet#key
-     * @see PApplet#keyCode
-     * @see PApplet#keyReleased()
-     */
-    public void keyTyped() {
-    }
 
     //////////////////////////////////////////////////////////////
 
@@ -2557,487 +1347,15 @@ public class PApplet implements PConstants {
     // and i'm going all out. i circle the vultures in a van
     // and i run the block.
 
-    public void focusGained() {
-    }
-
-    public void focusLost() {
-        // TODO: if user overrides this without calling super it's not gonna work
-        pressedKeys.clear();
-    }
-
     //////////////////////////////////////////////////////////////
 
     // getting the time
-
-    /**
-     * ( begin auto-generated from millis.xml )
-     * <p>
-     * Returns the number of milliseconds (thousandths of a second) since
-     * starting an applet. This information is often used for timing animation
-     * sequences.
-     * <p>
-     * ( end auto-generated )
-     *
-     * <h3>Advanced</h3>
-     * <p>
-     * This is a function, rather than a variable, because it may
-     * change multiple times per frame.
-     *
-     * @webref input:time_date
-     * @see PApplet#second()
-     * @see PApplet#minute()
-     * @see PApplet#hour()
-     * @see PApplet#day()
-     * @see PApplet#month()
-     * @see PApplet#year()
-     */
-    public int millis() {
-        return (int) (System.currentTimeMillis() - millisOffset);
-    }
-
-    /**
-     * ( begin auto-generated from second.xml )
-     * <p>
-     * Processing communicates with the clock on your computer. The
-     * <b>second()</b> function returns the current second as a value from 0 - 59.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:time_date
-     * @see PApplet#millis()
-     * @see PApplet#minute()
-     * @see PApplet#hour()
-     * @see PApplet#day()
-     * @see PApplet#month()
-     * @see PApplet#year()
-     */
-    static public int second() {
-        return Calendar.getInstance().get(Calendar.SECOND);
-    }
-
-    /**
-     * ( begin auto-generated from minute.xml )
-     * <p>
-     * Processing communicates with the clock on your computer. The
-     * <b>minute()</b> function returns the current minute as a value from 0 - 59.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:time_date
-     * @see PApplet#millis()
-     * @see PApplet#second()
-     * @see PApplet#hour()
-     * @see PApplet#day()
-     * @see PApplet#month()
-     * @see PApplet#year()
-     */
-    static public int minute() {
-        return Calendar.getInstance().get(Calendar.MINUTE);
-    }
-
-    /**
-     * ( begin auto-generated from hour.xml )
-     * <p>
-     * Processing communicates with the clock on your computer. The
-     * <b>hour()</b> function returns the current hour as a value from 0 - 23.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:time_date
-     * @see PApplet#millis()
-     * @see PApplet#second()
-     * @see PApplet#minute()
-     * @see PApplet#day()
-     * @see PApplet#month()
-     * @see PApplet#year()
-     */
-    static public int hour() {
-        return Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
-    }
-
-    /**
-     * ( begin auto-generated from day.xml )
-     * <p>
-     * Processing communicates with the clock on your computer. The
-     * <b>day()</b> function returns the current day as a value from 1 - 31.
-     * <p>
-     * ( end auto-generated )
-     * <h3>Advanced</h3>
-     * Get the current day of the month (1 through 31).
-     * <p>
-     * If you're looking for the day of the week (M-F or whatever)
-     * or day of the year (1..365) then use java's Calendar.get()
-     *
-     * @webref input:time_date
-     * @see PApplet#millis()
-     * @see PApplet#second()
-     * @see PApplet#minute()
-     * @see PApplet#hour()
-     * @see PApplet#month()
-     * @see PApplet#year()
-     */
-    static public int day() {
-        return Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
-    }
-
-    /**
-     * ( begin auto-generated from month.xml )
-     * <p>
-     * Processing communicates with the clock on your computer. The
-     * <b>month()</b> function returns the current month as a value from 1 - 12.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref input:time_date
-     * @see PApplet#millis()
-     * @see PApplet#second()
-     * @see PApplet#minute()
-     * @see PApplet#hour()
-     * @see PApplet#day()
-     * @see PApplet#year()
-     */
-    static public int month() {
-        // months are number 0..11 so change to colloquial 1..12
-        return Calendar.getInstance().get(Calendar.MONTH) + 1;
-    }
-
-    /**
-     * ( begin auto-generated from year.xml )
-     * <p>
-     * Processing communicates with the clock on your computer. The
-     * <b>year()</b> function returns the current year as an integer (2003,
-     * 2004, 2005, etc).
-     * <p>
-     * ( end auto-generated )
-     * The <b>year()</b> function returns the current year as an integer (2003, 2004, 2005, etc).
-     *
-     * @webref input:time_date
-     * @see PApplet#millis()
-     * @see PApplet#second()
-     * @see PApplet#minute()
-     * @see PApplet#hour()
-     * @see PApplet#day()
-     * @see PApplet#month()
-     */
-    static public int year() {
-        return Calendar.getInstance().get(Calendar.YEAR);
-    }
 
     //////////////////////////////////////////////////////////////
 
     // controlling time (playing god)
 
-    /**
-     * ( begin auto-generated from delay.xml )
-     * <p>
-     * The delay() function causes the program to halt for a specified time.
-     * Delay times are specified in thousandths of a second. For example,
-     * running delay(3000) will stop the program for three seconds and
-     * delay(500) will stop the program for a half-second.
-     * <p>
-     * The screen only updates when the end of draw() is reached, so delay()
-     * cannot be used to slow down drawing. For instance, you cannot use delay()
-     * to control the timing of an animation.
-     * <p>
-     * The delay() function should only be used for pausing scripts (i.e.
-     * a script that needs to pause a few seconds before attempting a download,
-     * or a sketch that needs to wait a few milliseconds before reading from
-     * the serial port).
-     * <p>
-     * ( end auto-generated )
-     *
-     * @param napTime milliseconds to pause before running draw() again
-     * @webref environment
-     * @see PApplet#frameRate
-     * @see PApplet#draw()
-     */
-    public void delay(int napTime) {
-        //if (frameCount != 0) {
-        //if (napTime > 0) {
-        try {
-            Thread.sleep(napTime);
-        } catch (InterruptedException e) {
-        }
-        //}
-        //}
-    }
-
     //////////////////////////////////////////////////////////////
-
-    /**
-     * Links to a webpage either in the same window or in a new window. The
-     * complete URL must be specified.
-     *
-     * <h3>Advanced</h3>
-     * Link to an external page without all the muss.
-     * <p>
-     * When run with an applet, uses the browser to open the url,
-     * for applications, attempts to launch a browser with the url.
-     *
-     * @param url the complete URL, as a String in quotes
-     */
-    public void link(String url) {
-        try {
-            if (Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().browse(new URI(url));
-            } else {
-                // Just pass it off to open() and hope for the best
-                launch(url);
-            }
-        } catch (IOException e) {
-            printStackTrace(e);
-        } catch (URISyntaxException e) {
-            printStackTrace(e);
-        }
-    }
-
-    static String openLauncher;
-
-    /**
-     * ( begin auto-generated from launch.xml )
-     * <p>
-     * Attempts to open an application or file using your platform's launcher.
-     * The <b>file</b> parameter is a String specifying the file name and
-     * location. The location parameter must be a full path name, or the name
-     * of an executable in the system's PATH. In most cases, using a full path
-     * is the best option, rather than relying on the system PATH. Be sure to
-     * make the file executable before attempting to open it (chmod +x).
-     * <br/> <br/>
-     * The <b>args</b> parameter is a String or String array which is passed to
-     * the command line. If you have multiple parameters, e.g. an application
-     * and a document, or a command with multiple switches, use the version
-     * that takes a String array, and place each individual item in a separate
-     * element.
-     * <br/> <br/>
-     * If args is a String (not an array), then it can only be a single file or
-     * application with no parameters. It's not the same as executing that
-     * String using a shell. For instance, launch("javac -help") will not work
-     * properly.
-     * <br/> <br/>
-     * This function behaves differently on each platform. On Windows, the
-     * parameters are sent to the Windows shell via "cmd /c". On Mac OS X, the
-     * "open" command is used (type "man open" in Terminal.app for
-     * documentation). On Linux, it first tries gnome-open, then kde-open, but
-     * if neither are available, it sends the command to the shell without any
-     * alterations.
-     * <br/> <br/>
-     * For users familiar with Java, this is not quite the same as
-     * Runtime.exec(), because the launcher command is prepended. Instead, the
-     * <b>exec(String[])</b> function is a shortcut for
-     * Runtime.getRuntime.exec(String[]).
-     * <p>
-     * ( end auto-generated )
-     *
-     * @param args arguments to the launcher, eg. a filename.
-     * @webref input:files
-     * @usage Application
-     */
-    static public Process launch(String... args) {
-        String[] params = null;
-
-        if (platform == WINDOWS) {
-            // just launching the .html file via the shell works
-            // but make sure to chmod +x the .html files first
-            // also place quotes around it in case there's a space
-            // in the user.dir part of the url
-            params = new String[]{"cmd", "/c"};
-
-        } else if (platform == MACOSX) {
-            params = new String[]{"open"};
-
-        } else if (platform == LINUX) {
-            // xdg-open is in the Free Desktop Specification and really should just
-            // work on desktop Linux. Not risking it though.
-            final String[] launchers = {"xdg-open", "gnome-open", "kde-open"};
-            for (String launcher : launchers) {
-                if (openLauncher != null) {
-                    break;
-                }
-                try {
-                    Process p = Runtime.getRuntime().exec(new String[]{launcher});
-                    /*int result =*/
-                    p.waitFor();
-                    // Not installed will throw an IOException (JDK 1.4.2, Ubuntu 7.04)
-                    openLauncher = launcher;
-                } catch (Exception e) {
-                }
-            }
-            if (openLauncher == null) {
-                System.err.println("Could not find xdg-open, gnome-open, or kde-open: " +
-                                           "the open() command may not work.");
-            }
-            if (openLauncher != null) {
-                params = new String[]{openLauncher};
-            }
-            //} else {  // give up and just pass it to Runtime.exec()
-            //open(new String[] { filename });
-            //params = new String[] { filename };
-        }
-        if (params != null) {
-            // If the 'open', 'gnome-open' or 'cmd' are already included
-            if (params[0].equals(args[0])) {
-                // then don't prepend those params again
-                return exec(args);
-            } else {
-                params = concat(params, args);
-                return exec(params);
-            }
-        } else {
-            return exec(args);
-        }
-    }
-
-    /**
-     * Pass a set of arguments directly to the command line. Uses Java's
-     * <A HREF="https://docs.oracle.com/javase/8/docs/api/java/lang/Runtime.html#exec-java.lang.String:A-">Runtime.exec()</A>
-     * method. This is different from the <A HREF="https://processing.org/reference/launch_.html">launch()</A>
-     * method, which uses the operating system's launcher to open the files.
-     * It's always a good idea to use a full path to the executable here.
-     * <pre>
-     * exec("/usr/bin/say", "welcome to the command line");
-     * </pre>
-     * Or if you want to wait until it's completed, something like this:
-     * <pre>
-     * Process p = exec("/usr/bin/say", "waiting until done");
-     * try {
-     *   int result = p.waitFor();
-     *   println("the process returned " + result);
-     * } catch (InterruptedException e) { }
-     * </pre>
-     * You can also get the system output and error streams from the Process
-     * object, but that's more that we'd like to cover here.
-     *
-     * @return a <A HREF="https://docs.oracle.com/javase/8/docs/api/java/lang/Process.html">Process</A> object
-     */
-    static public Process exec(String... args) {
-        try {
-            return Runtime.getRuntime().exec(args);
-        } catch (Exception e) {
-            throw new RuntimeException("Exception while attempting " + join(args, ' '), e);
-        }
-    }
-
-    static class LineThread extends Thread {
-        InputStream input;
-        StringList output;
-
-        LineThread(InputStream input, StringList output) {
-            this.input = input;
-            this.output = output;
-            start();
-        }
-
-        @Override
-        public void run() {
-            // It's not sufficient to use BufferedReader, because if the app being
-            // called fills up stdout or stderr to quickly, the app will hang.
-            // Instead, write to a byte[] array and then parse it once finished.
-            try {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                saveStream(baos, input);
-                BufferedReader reader =
-                        createReader(new ByteArrayInputStream(baos.toByteArray()));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    output.append(line);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    /**
-     * Alternative version of exec() that retrieves stdout and stderr into the
-     * StringList objects provided. This is a convenience function that handles
-     * simple exec() calls. If the results will be more than a couple lines,
-     * you shouldn't use this function, you should use a more elaborate method
-     * that makes use of proper threading (to drain the shell output) and error
-     * handling to address the many things that can go wrong within this method.
-     *
-     * @param stdout a non-null StringList object to be filled with any output
-     * @param stderr a non-null StringList object to be filled with error lines
-     * @param args   each argument to be passed as a series of String objects
-     * @return the result returned from the application, or -1 if an Exception
-     * occurs before the application is able to return a result.
-     */
-    static public int exec(StringList stdout, StringList stderr, String... args) {
-        Process p = exec(args);
-
-        Thread outThread = new LineThread(p.getInputStream(), stdout);
-        Thread errThread = new LineThread(p.getErrorStream(), stderr);
-    /*
-    final InputStream err = p.getErrorStream();
-    final InputStream out = p.getInputStream();
-    Thread outThread = new Thread(() ->  {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      String line;
-      try {
-        saveStream(baos, out);
-        BufferedReader err2 = createReader(new ByteArrayInputStream(baos.toByteArray()));
-        while ((line = err2.readLine()) != null) {
-          stdout.append(line);
-        }
-      } catch (IOException e) {
-        e.printStackTrace();
-        throw new RuntimeException(e);
-      }
-    });
-    outThread.start();
-
-    Thread errThread = new Thread(() ->  {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      String line;
-      try {
-        saveStream(baos, err);
-        BufferedReader err2 = createReader(new ByteArrayInputStream(baos.toByteArray()));
-        while ((line = err2.readLine()) != null) {
-          stderr.append(line);
-        }
-      } catch (IOException e) {
-        e.printStackTrace();
-        throw new RuntimeException(e);
-      }
-    });
-    errThread.start();
-    */
-
-        try {
-            int result = p.waitFor();
-            outThread.join();
-            errThread.join();
-            return result;
-
-        } catch (InterruptedException e) {
-            // Throwing the exception here because we can't give a valid 'result'
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Same as exec() above, but prefixes the call with a shell.
-     */
-    static public int shell(StringList stdout, StringList stderr, String... args) {
-        String shell;
-        String runCmd;
-        StringList argList = new StringList();
-        if (platform == WINDOWS) {
-            shell = System.getenv("COMSPEC");
-            runCmd = "/C";
-        } else {
-            shell = "/bin/sh";
-            runCmd = "-c";
-            // attempt emulate the behavior of an interactive shell
-            // can't use -i or -l since the version of bash shipped with macOS does not support this together with -c
-            // also we want to make sure no motd or similar gets returned as stdout
-            argList.append("if [ -f /etc/profile ]; then . /etc/profile >/dev/null 2>&1; fi;");
-            argList.append("if [ -f ~/.bash_profile ]; then . ~/.bash_profile >/dev/null 2>&1; elif [ -f ~/.bash_profile ]; then . ~/.bash_profile >/dev/null 2>&1; elif [ -f ~/.profile ]; then ~/.profile >/dev/null 2>&1; fi;");
-        }
-        for (String arg : args) {
-            argList.append(arg);
-        }
-        return exec(stdout, stderr, shell, runCmd, argList.join(" "));
-    }
 
 
   /*
@@ -3091,59 +1409,6 @@ public class PApplet implements PConstants {
     }
 
     //////////////////////////////////////////////////////////////
-
-    /**
-     * Call a method in the current class based on its name.
-     * <p/>
-     * Note that the function being called must be public. Inside the PDE,
-     * 'public' is automatically added, but when used without the preprocessor,
-     * (like from Eclipse) you'll have to do it yourself.
-     */
-    public void method(String name) {
-        try {
-            Method method = getClass().getMethod(name, new Class[]{});
-            method.invoke(this, new Object[]{});
-
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.getTargetException().printStackTrace();
-        } catch (NoSuchMethodException nsme) {
-            System.err.println("There is no public " + name + "() method " +
-                                       "in the class " + getClass().getName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Launch a new thread and call the specified function from that new thread.
-     * This is a very simple way to do a thread without needing to get into
-     * classes, runnables, etc.
-     * <p/>
-     * Note that the function being called must be public. Inside the PDE,
-     * 'public' is automatically added, but when used without the preprocessor,
-     * (like from Eclipse) you'll have to do it yourself.
-     *
-     * @param name name of the function to be executed in a separate thread
-     * @webref structure
-     * @usage Application
-     * @see PApplet#setup()
-     * @see PApplet#draw()
-     * @see PApplet#loop()
-     * @see PApplet#noLoop()
-     */
-    public void thread(final String name) {
-        Thread later = new Thread() {
-            @Override
-            public void run() {
-                method(name);
-            }
-        };
-        later.start();
-    }
 
     //////////////////////////////////////////////////////////////
 
@@ -5635,270 +3900,6 @@ public class PApplet implements PConstants {
   }
   */
 
-    static private boolean lookAndFeelCheck;
-
-    /**
-     * Initialize the Look & Feel if it hasn't been already.
-     * Call this before using any Swing-related code in PApplet methods.
-     */
-    static private void checkLookAndFeel() {
-        if (!lookAndFeelCheck) {
-            if (platform == WINDOWS) {
-                // Windows is defaulting to Metal or something else awful.
-                // Which also is not scaled properly with HiDPI interfaces.
-                try {
-                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                } catch (Exception e) {
-                }
-            }
-            lookAndFeelCheck = true;
-        }
-    }
-
-    /**
-     * Open a platform-specific file chooser dialog to select a file for input.
-     * After the selection is made, the selected File will be passed to the
-     * 'callback' function. If the dialog is closed or canceled, null will be
-     * sent to the function, so that the program is not waiting for additional
-     * input. The callback is necessary because of how threading works.
-     *
-     * <pre>
-     * void setup() {
-     *   selectInput("Select a file to process:", "fileSelected");
-     * }
-     *
-     * void fileSelected(File selection) {
-     *   if (selection == null) {
-     *     println("Window was closed or the user hit cancel.");
-     *   } else {
-     *     println("User selected " + fileSeleted.getAbsolutePath());
-     *   }
-     * }
-     * </pre>
-     * <p>
-     * For advanced users, the method must be 'public', which is true for all
-     * methods inside a sketch when run from the PDE, but must explicitly be
-     * set when using Eclipse or other development environments.
-     *
-     * @param prompt   message to the user
-     * @param callback name of the method to be called when the selection is made
-     * @webref input:files
-     */
-    public void selectInput(String prompt, String callback) {
-        selectInput(prompt, callback, null);
-    }
-
-    public void selectInput(String prompt, String callback, File file) {
-        selectInput(prompt, callback, file, this);
-    }
-
-    public void selectInput(String prompt, String callback,
-                            File file, Object callbackObject) {
-        selectInput(prompt, callback, file, callbackObject, null, this);  //selectFrame());
-    }
-
-    static public void selectInput(String prompt, String callbackMethod,
-                                   File file, Object callbackObject, Frame parent,
-                                   PApplet sketch) {
-        selectImpl(prompt, callbackMethod, file, callbackObject, parent, FileDialog.LOAD, sketch);
-    }
-
-    static public void selectInput(String prompt, String callbackMethod,
-                                   File file, Object callbackObject, Frame parent) {
-        selectImpl(prompt, callbackMethod, file, callbackObject, parent, FileDialog.LOAD, null);
-    }
-
-    /**
-     * See selectInput() for details.
-     *
-     * @param prompt   message to the user
-     * @param callback name of the method to be called when the selection is made
-     * @webref output:files
-     */
-    public void selectOutput(String prompt, String callback) {
-        selectOutput(prompt, callback, null);
-    }
-
-    public void selectOutput(String prompt, String callback, File file) {
-        selectOutput(prompt, callback, file, this);
-    }
-
-    public void selectOutput(String prompt, String callback,
-                             File file, Object callbackObject) {
-        selectOutput(prompt, callback, file, callbackObject, null, this); //selectFrame());
-    }
-
-    static public void selectOutput(String prompt, String callbackMethod,
-                                    File file, Object callbackObject, Frame parent) {
-        selectImpl(prompt, callbackMethod, file, callbackObject, parent, FileDialog.SAVE, null);
-    }
-
-    static public void selectOutput(String prompt, String callbackMethod,
-                                    File file, Object callbackObject, Frame parent,
-                                    PApplet sketch) {
-        selectImpl(prompt, callbackMethod, file, callbackObject, parent, FileDialog.SAVE, sketch);
-    }
-
-    // Will remove the 'sketch' parameter once we get an upstream JOGL fix
-    // https://github.com/processing/processing/issues/3831
-    static protected void selectImpl(final String prompt,
-                                     final String callbackMethod,
-                                     final File defaultSelection,
-                                     final Object callbackObject,
-                                     final Frame parentFrame,
-                                     final int mode,
-                                     final PApplet sketch) {
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                File selectedFile = null;
-
-                boolean hide = (sketch != null) &&
-                        (sketch.g instanceof PGraphicsOpenGL) && (platform == WINDOWS);
-                if (hide) {
-                    sketch.surface.setVisible(false);
-                }
-
-                if (useNativeSelect) {
-                    FileDialog dialog = new FileDialog(parentFrame, prompt, mode);
-                    if (defaultSelection != null) {
-                        dialog.setDirectory(defaultSelection.getParent());
-                        dialog.setFile(defaultSelection.getName());
-                    }
-
-                    dialog.setVisible(true);
-                    String directory = dialog.getDirectory();
-                    String filename = dialog.getFile();
-                    if (filename != null) {
-                        selectedFile = new File(directory, filename);
-                    }
-
-                } else {
-                    JFileChooser chooser = new JFileChooser();
-                    chooser.setDialogTitle(prompt);
-                    if (defaultSelection != null) {
-                        chooser.setSelectedFile(defaultSelection);
-                    }
-
-                    int result = -1;
-                    if (mode == FileDialog.SAVE) {
-                        result = chooser.showSaveDialog(parentFrame);
-                    } else if (mode == FileDialog.LOAD) {
-                        result = chooser.showOpenDialog(parentFrame);
-                    }
-                    if (result == JFileChooser.APPROVE_OPTION) {
-                        selectedFile = chooser.getSelectedFile();
-                    }
-                }
-
-                if (hide) {
-                    sketch.surface.setVisible(true);
-                }
-                selectCallback(selectedFile, callbackMethod, callbackObject);
-            }
-        });
-    }
-
-    /**
-     * See selectInput() for details.
-     *
-     * @param prompt   message to the user
-     * @param callback name of the method to be called when the selection is made
-     * @webref input:files
-     */
-    public void selectFolder(String prompt, String callback) {
-        selectFolder(prompt, callback, null);
-    }
-
-    public void selectFolder(String prompt, String callback, File file) {
-        selectFolder(prompt, callback, file, this);
-    }
-
-    public void selectFolder(String prompt, String callback,
-                             File file, Object callbackObject) {
-        selectFolder(prompt, callback, file, callbackObject, null, this); //selectFrame());
-    }
-
-    static public void selectFolder(final String prompt,
-                                    final String callbackMethod,
-                                    final File defaultSelection,
-                                    final Object callbackObject,
-                                    final Frame parentFrame) {
-        selectFolder(prompt, callbackMethod, defaultSelection, callbackObject, parentFrame, null);
-    }
-
-    // Will remove the 'sketch' parameter once we get an upstream JOGL fix
-    // https://github.com/processing/processing/issues/3831
-    static public void selectFolder(final String prompt,
-                                    final String callbackMethod,
-                                    final File defaultSelection,
-                                    final Object callbackObject,
-                                    final Frame parentFrame,
-                                    final PApplet sketch) {
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                File selectedFile = null;
-
-                boolean hide = (sketch != null) &&
-                        (sketch.g instanceof PGraphicsOpenGL) && (platform == WINDOWS);
-                if (hide) {
-                    sketch.surface.setVisible(false);
-                }
-
-                if (platform == MACOSX && useNativeSelect != false) {
-                    FileDialog fileDialog =
-                            new FileDialog(parentFrame, prompt, FileDialog.LOAD);
-                    if (defaultSelection != null) {
-                        fileDialog.setDirectory(defaultSelection.getAbsolutePath());
-                    }
-                    System.setProperty("apple.awt.fileDialogForDirectories", "true");
-                    fileDialog.setVisible(true);
-                    System.setProperty("apple.awt.fileDialogForDirectories", "false");
-                    String filename = fileDialog.getFile();
-                    if (filename != null) {
-                        selectedFile = new File(fileDialog.getDirectory(), fileDialog.getFile());
-                    }
-                } else {
-                    checkLookAndFeel();
-                    JFileChooser fileChooser = new JFileChooser();
-                    fileChooser.setDialogTitle(prompt);
-                    fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                    if (defaultSelection != null) {
-                        fileChooser.setCurrentDirectory(defaultSelection);
-                    }
-
-                    int result = fileChooser.showOpenDialog(parentFrame);
-                    if (result == JFileChooser.APPROVE_OPTION) {
-                        selectedFile = fileChooser.getSelectedFile();
-                    }
-                }
-
-                if (hide) {
-                    sketch.surface.setVisible(true);
-                }
-                selectCallback(selectedFile, callbackMethod, callbackObject);
-            }
-        });
-    }
-
-    static private void selectCallback(File selectedFile,
-                                       String callbackMethod,
-                                       Object callbackObject) {
-        try {
-            Class<?> callbackClass = callbackObject.getClass();
-            Method selectMethod =
-                    callbackClass.getMethod(callbackMethod, new Class[]{File.class});
-            selectMethod.invoke(callbackObject, new Object[]{selectedFile});
-
-        } catch (IllegalAccessException iae) {
-            System.err.println(callbackMethod + "() must be public");
-
-        } catch (InvocationTargetException ite) {
-            ite.printStackTrace();
-
-        } catch (NoSuchMethodException nsme) {
-            System.err.println(callbackMethod + "() could not be found");
-        }
-    }
 
     //////////////////////////////////////////////////////////////
 
@@ -6247,9 +4248,6 @@ public class PApplet implements PConstants {
      *
      * @param filename the name of the file to use as input
      * @webref input:files
-     * @see PApplet#createOutput(String)
-     * @see PApplet#selectOutput(String, String)
-     * @see PApplet#selectInput(String, String)
      */
     public InputStream createInput(String filename) {
         InputStream input = createInputRaw(filename);
@@ -6792,36 +4790,6 @@ public class PApplet implements PConstants {
     // FILE OUTPUT
 
     /**
-     * ( begin auto-generated from createOutput.xml )
-     * <p>
-     * Similar to <b>createInput()</b>, this creates a Java <b>OutputStream</b>
-     * for a given filename or path. The file will be created in the sketch
-     * folder, or in the same folder as an exported application.
-     * <br /><br />
-     * If the path does not exist, intermediate folders will be created. If an
-     * exception occurs, it will be printed to the console, and <b>null</b>
-     * will be returned.
-     * <br /><br />
-     * This function is a convenience over the Java approach that requires you
-     * to 1) create a FileOutputStream object, 2) determine the exact file
-     * location, and 3) handle exceptions. Exceptions are handled internally by
-     * the function, which is more appropriate for "sketch" projects.
-     * <br /><br />
-     * If the output filename ends with <b>.gz</b>, the output will be
-     * automatically GZIP compressed as it is written.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @param filename name of the file to open
-     * @webref output:files
-     * @see PApplet#createInput(String)
-     * @see PApplet#selectOutput(String, String)
-     */
-    public OutputStream createOutput(String filename) {
-        return createOutput(saveFile(filename));
-    }
-
-    /**
      * @nowebref
      */
     static public OutputStream createOutput(File file) {
@@ -6837,84 +4805,6 @@ public class PApplet implements PConstants {
             e.printStackTrace();
         }
         return null;
-    }
-
-    /**
-     * ( begin auto-generated from saveStream.xml )
-     * <p>
-     * Save the contents of a stream to a file in the sketch folder. This is
-     * basically <b>saveBytes(blah, loadBytes())</b>, but done more efficiently
-     * (and with less confusing syntax).<br />
-     * <br />
-     * When using the <b>targetFile</b> parameter, it writes to a <b>File</b>
-     * object for greater control over the file location. (Note that unlike
-     * some other functions, this will not automatically compress or uncompress
-     * gzip files.)
-     * <p>
-     * ( end auto-generated )
-     *
-     * @param target name of the file to write to
-     * @param source location to read from (a filename, path, or URL)
-     * @webref output:files
-     * @see PApplet#createOutput(String)
-     */
-    public boolean saveStream(String target, String source) {
-        return saveStream(saveFile(target), source);
-    }
-
-    /**
-     * Identical to the other saveStream(), but writes to a File
-     * object, for greater control over the file location.
-     * <p/>
-     * Note that unlike other api methods, this will not automatically
-     * compress or uncompress gzip files.
-     */
-    public boolean saveStream(File target, String source) {
-        return saveStream(target, createInputRaw(source));
-    }
-
-    /**
-     * @nowebref
-     */
-    public boolean saveStream(String target, InputStream source) {
-        return saveStream(saveFile(target), source);
-    }
-
-    /**
-     * @nowebref
-     */
-    static public boolean saveStream(File target, InputStream source) {
-        File tempFile = null;
-        try {
-            // make sure that this path actually exists before writing
-            createPath(target);
-            tempFile = createTempFile(target);
-            FileOutputStream targetStream = new FileOutputStream(tempFile);
-
-            saveStream(targetStream, source);
-            targetStream.close();
-            targetStream = null;
-
-            if (target.exists()) {
-                if (!target.delete()) {
-                    System.err.println("Could not replace " +
-                                               target.getAbsolutePath() + ".");
-                }
-            }
-            if (!tempFile.renameTo(target)) {
-                System.err.println("Could not rename temporary file " +
-                                           tempFile.getAbsolutePath());
-                return false;
-            }
-            return true;
-
-        } catch (IOException e) {
-            if (tempFile != null) {
-                tempFile.delete();
-            }
-            e.printStackTrace();
-            return false;
-        }
     }
 
     /**
@@ -9733,162 +7623,14 @@ public class PApplet implements PConstants {
 
     //////////////////////////////////////////////////////////////
 
-    public void frameMoved(int x, int y) {
-        if (!fullScreen) {
-            System.err.println(EXTERNAL_MOVE + " " + x + " " + y);
-            System.err.flush();  // doesn't seem to help or hurt
-        }
-    }
-
-    public void frameResized(int w, int h) {
-    }
-
     //////////////////////////////////////////////////////////////
 
     // MAIN
 
-    /**
-     * main() method for running this class from the command line.
-     * <p>
-     * Usage: PApplet [options] &lt;class name&gt; [sketch args]
-     * <ul>
-     * <li>The [options] are one or several of the parameters seen below.
-     * <li>The class name is required. If you're running outside the PDE and
-     * your class is in a package, this should include the full name. That means
-     * that if the class is called Sketchy and the package is com.sketchycompany
-     * then com.sketchycompany.Sketchy should be used as the class name.
-     * <li>The [sketch args] are any command line parameters you want to send to
-     * the sketch itself. These will be passed into the args[] array in PApplet.
-     * <p>
-     * The simplest way to turn and sketch into an application is to
-     * add the following code to your program:
-     * <PRE>static public void main(String args[]) {
-     *   PApplet.main("YourSketchName");
-     * }</PRE>
-     * That will properly launch your code from a double-clickable .jar
-     * or from the command line.
-     * <PRE>
-     * Parameters useful for launching or also used by the PDE:
-     * <p>
-     * --location=x,y         Upper-lefthand corner of where the applet
-     *                        should appear on screen. If not used,
-     *                        the default is to center on the main screen.
-     * <p>
-     * --present              Presentation mode: blanks the entire screen and
-     *                        shows the sketch by itself. If the sketch is
-     *                        smaller than the screen, the background around it
-     *                        will use the --window-color setting.
-     * <p>
-     * --hide-stop            Use to hide the stop button in situations where
-     *                        you don't want to allow users to exit. also
-     *                        see the FAQ on information for capturing the ESC
-     *                        key when running in presentation mode.
-     * <p>
-     * --stop-color=#xxxxxx   Color of the 'stop' text used to quit an
-     *                        sketch when it's in present mode.
-     * <p>
-     * --window-color=#xxxxxx Background color of the window. The color used
-     *                        around the sketch when it's smaller than the
-     *                        minimum window size for the OS, and the matte
-     *                        color when using 'present' mode.
-     * <p>
-     * --sketch-path          Location of where to save files from functions
-     *                        like saveStrings() or saveFrame(). defaults to
-     *                        the folder that the java application was
-     *                        launched from, which means if this isn't set by
-     *                        the pde, everything goes into the same folder
-     *                        as processing.exe.
-     * <p>
-     * --display=n            Set what display should be used by this sketch.
-     *                        Displays are numbered starting from 1. This will
-     *                        be overridden by fullScreen() calls that specify
-     *                        a display. Omitting this option will cause the
-     *                        default display to be used.
-     * <p>
-     * Parameters used by Processing when running via the PDE
-     * <p>
-     * --external             set when the applet is being used by the PDE
-     * <p>
-     * --editor-location=x,y  position of the upper-lefthand corner of the
-     *                        editor window, for placement of applet window
-     * <p>
-     * All parameters *after* the sketch class name are passed to the sketch
-     * itself and available from its 'args' array while the sketch is running.
-     *
-     * @see PApplet#args
-     * </PRE>
-     */
-    static public void main() {
-        runSketch(null);
-    }
-
-    /**
-     * Convenience method so that PApplet.main(YourSketch.class)
-     * launches a sketch, rather than having to call getName() on it.
-     */
-    static public void main(final Class<?> mainClass, String... args) {
-        main(mainClass.getName(), args);
-    }
-
-    /**
-     * Convenience method so that PApplet.main("YourSketch") launches a sketch,
-     * rather than having to wrap it into a single element String array.
-     *
-     * @param mainClass name of the class to load (with package if any)
-     */
-    static public void main(final String mainClass) {
-        main(mainClass, null);
-    }
-
-    /**
-     * Convenience method so that PApplet.main("YourSketch", args) launches a
-     * sketch, rather than having to wrap it into a String array, and appending
-     * the 'args' array when not null.
-     *
-     * @param mainClass  name of the class to load (with package if any)
-     * @param sketchArgs command line arguments to pass to the sketch's 'args'
-     *                   array. Note that this is <i>not</i> the same as the args passed
-     *                   to (and understood by) PApplet such as --display.
-     */
-    static public void main(final String mainClass, final String[] sketchArgs) {
-        String[] args = new String[]{mainClass};
-        if (sketchArgs != null) {
-            args = concat(args, sketchArgs);
-        }
-        runSketch(null);
-    }
-
-    // Moving this back off the EDT for alpha 10. Not sure if we're helping or
-    // hurting, but unless we do, errors inside settings() are never passed
-    // through to the PDE. There are other ways around that, no doubt, but I'm
-    // also suspecting that these "not showing up" bugs might be EDT issues.
-    static public void runSketch(final PApplet constructedSketch) {
-        constructedSketch.handleSettings();
-        constructedSketch.initSurface();
-        constructedSketch.showSurface();
-    }
-
-    /**
-     * Danger: available for advanced subclassing, but here be dragons.
-     */
-    protected void showSurface() {
-        if (getGraphics().displayable()) {
-            surface.setVisible(true);
-        }
-    }
-
     public PSurface initSurface() {
         g = createPrimaryGraphics();
         surface = g.createSurface();
-
-        // Create fake Frame object to warn user about the changes
-        if (g.displayable()) {
-            surface.initFrame(this); //, backgroundColor, displayNum, fullScreen, spanDisplays);
-        } else {
-            surface.initOffscreen(this);  // for PDF/PSurfaceNone and friends
-        }
-
-//    init();
+        surface.init();
         return surface;
     }
 
