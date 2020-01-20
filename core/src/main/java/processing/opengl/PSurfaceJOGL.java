@@ -54,7 +54,7 @@ public class PSurfaceJOGL implements PSurface {
         pgl.setCaps(caps);
 
         drawable = GLDrawableFactory.getEGLFactory().createOffscreenAutoDrawable(
-                GLDrawableFactory.getEGLFactory().getDefaultDevice(),
+                null,
                 caps,
                 null,
                 1,
