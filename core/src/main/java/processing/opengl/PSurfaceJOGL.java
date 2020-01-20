@@ -35,7 +35,6 @@ import processing.core.PSurface;
 
 public class PSurfaceJOGL implements PSurface {
 
-    public static GLProfile profile;
     public PJOGL pgl;
     protected GLOffscreenAutoDrawable drawable;
 
@@ -44,62 +43,7 @@ public class PSurfaceJOGL implements PSurface {
     }
 
     public void init() {
-        initGL();
-        initDrawable();
-    }
-
-    protected void initGL() {
-        if (profile == null) {
-            switch (PJOGL.profile) {
-                case 1:
-                    try {
-                        profile = GLProfile.getGL2ES1();
-                    } catch (GLException ex) {
-                        profile = GLProfile.getMaxFixedFunc(true);
-                    }
-                    break;
-                case 2:
-                    try {
-                        profile = GLProfile.getGL2ES2();
-
-                        // workaround for https://jogamp.org/bugzilla/show_bug.cgi?id=1347
-                        if (!profile.isHardwareRasterizer()) {
-                            GLProfile hardware = GLProfile.getMaxProgrammable(true);
-                            if (hardware.isGL2ES2()) {
-                                profile = hardware;
-                            }
-                        }
-
-                    } catch (GLException ex) {
-                        profile = GLProfile.getMaxProgrammable(true);
-                    }
-                    break;
-                case 3:
-                    try {
-                        profile = GLProfile.getGL2GL3();
-                    } catch (GLException ex) {
-                        profile = GLProfile.getMaxProgrammable(true);
-                    }
-                    if (!profile.isGL3()) {
-                        PGraphics.showWarning("Requested profile GL3 but is not available, got: " + profile);
-                    }
-                    break;
-                case 4:
-                    try {
-                        profile = GLProfile.getGL4ES3();
-                    } catch (GLException ex) {
-                        profile = GLProfile.getMaxProgrammable(true);
-                    }
-                    if (!profile.isGL4()) {
-                        PGraphics.showWarning("Requested profile GL4 but is not available, got: " + profile);
-                    }
-                    break;
-                default:
-                    throw new RuntimeException(PGL.UNSUPPORTED_GLPROF_ERROR);
-            }
-        }
-
-        GLCapabilities caps = new GLCapabilities(profile);
+        GLCapabilities caps = new GLCapabilities(GLProfile.getGL4ES3());
         caps.setAlphaBits(PGL.REQUESTED_ALPHA_BITS);
         caps.setDepthBits(PGL.REQUESTED_DEPTH_BITS);
         caps.setStencilBits(PGL.REQUESTED_STENCIL_BITS);
@@ -108,12 +52,10 @@ public class PSurfaceJOGL implements PSurface {
         caps.setBackgroundOpaque(true);
         caps.setOnscreen(true);
         pgl.setCaps(caps);
-    }
 
-    protected void initDrawable() {
         drawable = GLDrawableFactory.getEGLFactory().createOffscreenAutoDrawable(
                 GLDrawableFactory.getEGLFactory().getDefaultDevice(),
-                pgl.getCaps(),
+                caps,
                 null,
                 1,
                 1

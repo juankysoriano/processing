@@ -68,7 +68,7 @@ val PGraphics.bytes: ByteArray
     }
 
 enum class Quality(val value: Int) {
-    LOW(0), MID(1), HIGH(2)
+    LOW(0), MID(2), HIGH(8)
 }
 
 enum class Format(val value: Int) {
