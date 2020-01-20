@@ -65,13 +65,6 @@ public class PJOGL extends PGL {
   // OpenGL profile to use (2, 3 or 4)
   public static int profile = 4;
 
-  // User-provided icons to override defaults
-  protected static String[] icons = null;
-
-  // The two windowing toolkits available to use in JOGL:
-  public static final int AWT  = 0; // http://jogamp.org/wiki/index.php/Using_JOGL_in_AWT_SWT_and_Swing
-  public static final int NEWT = 1; // http://jogamp.org/jogl/doc/NEWT-Overview.html
-
   // ........................................................
 
   // Public members to access the underlying GL objects and context
@@ -88,11 +81,6 @@ public class PJOGL extends PGL {
   // ........................................................
 
   // Additional parameters
-
-  /** Time that the Processing's animation thread will wait for JOGL's rendering
-   * thread to be done with a single frame.
-   */
-  protected static int DRAW_TIMEOUT_MILLIS = 500;
 
   // ........................................................
 
@@ -116,9 +104,6 @@ public class PJOGL extends PGL {
 
   /** GL3ES3 interface */
   protected GL3ES3 gl3es3;
-
-  /** Stores exceptions that ocurred during drawing */
-  protected Exception drawException;
 
   // ........................................................
 
@@ -151,12 +136,6 @@ public class PJOGL extends PGL {
   @Override
   protected void initSurface(int antialias) {}
 
-  static public void setIcon(String... icons) {
-    PJOGL.icons = new String[icons.length];
-    PApplet.arrayCopy(icons, PJOGL.icons);
-  }
-
-
   ///////////////////////////////////////////////////////////////
 
   // Public methods to get/set renderer's properties
@@ -171,23 +150,6 @@ public class PJOGL extends PGL {
   public GLCapabilitiesImmutable getCaps() {
     return capabilities;
   }
-
-
-  public void setFps(float fps) {
-    if (!setFps || targetFps != fps) {
-      if (60 < fps) {
-        // Disables v-sync
-        gl.setSwapInterval(0);
-      } else if (30 < fps) {
-        gl.setSwapInterval(1);
-      } else {
-        gl.setSwapInterval(2);
-      }
-      targetFps = currentFps = fps;
-      setFps = true;
-    }
-  }
-
 
   @Override
   protected int getDepthBits() {
@@ -700,7 +662,7 @@ public class PJOGL extends PGL {
     PathIterator iter;
 
     public FontOutline(char ch, Font font) {
-      char textArray[] = new char[] { ch };
+      char[] textArray = new char[] { ch };
       FontRenderContext frc = getFontRenderContext(font);
       GlyphVector gv = font.createGlyphVector(frc, textArray);
       Shape shp = gv.getOutline();
@@ -711,7 +673,7 @@ public class PJOGL extends PGL {
       return iter.isDone();
     }
 
-    public int currentSegment(float coords[]) {
+    public int currentSegment(float[] coords) {
       return iter.currentSegment(coords);
     }
 
@@ -1447,7 +1409,7 @@ public class PJOGL extends PGL {
 
   @Override
   public void shaderSource(int shader, String source) {
-    gl2.glShaderSource(shader, 1, new String[] { source }, (int[]) null, 0);
+    gl2.glShaderSource(shader, 1, new String[] { source }, null, 0);
   }
 
   @Override
@@ -1507,8 +1469,7 @@ public class PJOGL extends PGL {
     gl2.glGetActiveAttrib(program, index, 1024, tmp, 0, tmp, 1, tmp, 2, namebuf, 0);
     size.put(tmp[1]);
     type.put(tmp[2]);
-    String name = new String(namebuf, 0, tmp[0]);
-    return name;
+    return new String(namebuf, 0, tmp[0]);
   }
 
   @Override
@@ -1533,8 +1494,7 @@ public class PJOGL extends PGL {
     gl2.glGetActiveUniform(program, index, 1024, tmp, 0, tmp, 1, tmp, 2, namebuf, 0);
     size.put(tmp[1]);
     type.put(tmp[2]);
-    String name = new String(namebuf, 0, tmp[0]);
-    return name;
+    return new String(namebuf, 0, tmp[0]);
   }
 
   @Override

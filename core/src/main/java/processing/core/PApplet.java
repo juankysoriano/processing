@@ -107,32 +107,6 @@ import processing.opengl.*;
  * than working around legacy Java code.
  */
 public class PApplet implements PConstants {
-    /**
-     * Full name of the Java version (i.e. 1.5.0_11).
-     */
-    static public final String javaVersionName =
-            System.getProperty("java.version");
-
-    static public final int javaPlatform;
-
-    static {
-        String version = javaVersionName;
-        if (javaVersionName.startsWith("1.")) {
-            version = version.substring(2);
-            javaPlatform = parseInt(version.substring(0, version.indexOf('.')));
-        } else {
-            // Remove -xxx and .yyy from java.version (@see JEP-223)
-            javaPlatform = parseInt(version.replaceAll("-.*", "").replaceAll("\\..*", ""));
-        }
-    }
-
-    /**
-     * Do not use; javaPlatform or javaVersionName are better options.
-     * For instance, javaPlatform is useful when you need a number for
-     * comparison, i.e. "if (javaPlatform >= 9)".
-     */
-    @Deprecated
-    public static final float javaVersion = 1 + javaPlatform / 10f;
 
     /**
      * Current platform in use, one of the
@@ -175,8 +149,7 @@ public class PApplet implements PConstants {
     private String sketchPath;
 //  public String sketchPath;
 
-    static final boolean DEBUG = false;
-//  static final boolean DEBUG = true;
+    //  static final boolean DEBUG = true;
 
     /**
      * Default width and height for sketch when not specified
@@ -348,11 +321,6 @@ public class PApplet implements PConstants {
 
     // messages to send if attached as an external vm
 
-    /**
-     * true if this sketch is being run by the PDE
-     */
-    boolean external = false;
-
     static final String ERROR_MIN_MAX =
             "Cannot use min() or max() on an empty array.";
 
@@ -440,7 +408,6 @@ public class PApplet implements PConstants {
     // Unlike the others above, needs to be public to support
     // the pixelWidth and pixelHeight fields.
     public int pixelDensity = 1;
-    int suggestedDensity = -1;
 
     String outputPath;
 
@@ -535,24 +502,10 @@ public class PApplet implements PConstants {
         this.smooth = 0;
     }
 
-    private void smoothWarning(String method) {
-        // When running from the PDE, say setup(), otherwise say settings()
-        final String where = external ? "setup" : "settings";
-        PGraphics.showWarning("%s() can only be used inside %s()", method, where);
-        if (external) {
-            PGraphics.showWarning("When run from the PDE, %s() is automatically moved from setup() to settings()", method);
-        }
-    }
-
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
     public PGraphics getGraphics() {
         return g;
-    }
-
-    // TODO should this join the sketchXxxx() functions specific to settings()?
-    public void orientation(int which) {
-        // ignore calls to the orientation command
     }
 
     //  /**
@@ -573,220 +526,9 @@ public class PApplet implements PConstants {
 
     //////////////////////////////////////////////////////////////
 
-    /**
-     * Map of registered methods, stored by name.
-     */
-    HashMap<String, RegisteredMethods> registerMap =
-            new HashMap<>();
-
-    /**
-     * Lock when un/registering from multiple threads
-     */
-    private final Object registerLock = new Object[0];
-
-    class RegisteredMethods {
-        int count;
-        Object[] objects;
-        // Because the Method comes from the class being called,
-        // it will be unique for most, if not all, objects.
-        Method[] methods;
-        Object[] emptyArgs = new Object[]{};
-
-        void handle() {
-            handle(emptyArgs);
-        }
-
-        void handle(Object[] args) {
-            for (int i = 0; i < count; i++) {
-                try {
-                    methods[i].invoke(objects[i], args);
-                } catch (Exception e) {
-                    // check for wrapped exception, get root exception
-                    Throwable t;
-                    if (e instanceof InvocationTargetException) {
-                        InvocationTargetException ite = (InvocationTargetException) e;
-                        t = ite.getCause();
-                    } else {
-                        t = e;
-                    }
-                    // check for RuntimeException, and allow to bubble up
-                    if (t instanceof RuntimeException) {
-                        // re-throw exception
-                        throw (RuntimeException) t;
-                    } else {
-                        // trap and print as usual
-                        printStackTrace(t);
-                    }
-                }
-            }
-        }
-
-        void add(Object object, Method method) {
-            if (findIndex(object) == -1) {
-                if (objects == null) {
-                    objects = new Object[5];
-                    methods = new Method[5];
-
-                } else if (count == objects.length) {
-                    objects = (Object[]) PApplet.expand(objects);
-                    methods = (Method[]) PApplet.expand(methods);
-                }
-                objects[count] = object;
-                methods[count] = method;
-                count++;
-            } else {
-                die(method.getName() + "() already added for this instance of " +
-                            object.getClass().getName());
-            }
-        }
-
-        /**
-         * Removes first object/method pair matched (and only the first,
-         * must be called multiple times if object is registered multiple times).
-         * Does not shrink array afterwards, silently returns if method not found.
-         */
-//    public void remove(Object object, Method method) {
-//      int index = findIndex(object, method);
-        public void remove(Object object) {
-            int index = findIndex(object);
-            if (index != -1) {
-                // shift remaining methods by one to preserve ordering
-                count--;
-                for (int i = index; i < count; i++) {
-                    objects[i] = objects[i + 1];
-                    methods[i] = methods[i + 1];
-                }
-                // clean things out for the gc's sake
-                objects[count] = null;
-                methods[count] = null;
-            }
-        }
-
-        //    protected int findIndex(Object object, Method method) {
-        protected int findIndex(Object object) {
-            for (int i = 0; i < count; i++) {
-                if (objects[i] == object) {
-//        if (objects[i] == object && methods[i].equals(method)) {
-                    //objects[i].equals() might be overridden, so use == for safety
-                    // since here we do care about actual object identity
-                    //methods[i]==method is never true even for same method, so must use
-                    // equals(), this should be safe because of object identity
-                    return i;
-                }
-            }
-            return -1;
-        }
-    }
-
-    /**
-     * Register a built-in event so that it can be fired for libraries, etc.
-     * Supported events include:
-     * <ul>
-     * <li>pre – at the very top of the draw() method (safe to draw)
-     * <li>draw – at the end of the draw() method (safe to draw)
-     * <li>post – after draw() has exited (not safe to draw)
-     * <li>pause – called when the sketch is paused
-     * <li>resume – called when the sketch is resumed
-     * <li>dispose – when the sketch is shutting down (definitely not safe to draw)
-     * <ul>
-     * In addition, the new (for 2.0) processing.event classes are passed to
-     * the following event types:
-     * <ul>
-     * <li>mouseEvent
-     * <li>keyEvent
-     * <li>touchEvent
-     * </ul>
-     * The older java.awt events are no longer supported.
-     * See the Library Wiki page for more details.
-     *
-     * @param methodName name of the method to be called
-     * @param target     the target object that should receive the event
-     */
-    public void registerMethod(String methodName, Object target) {
-        if (methodName.equals("mouseEvent")) {
-            registerWithArgs("mouseEvent", target, new Class[]{processing.event.MouseEvent.class});
-
-        } else if (methodName.equals("keyEvent")) {
-            registerWithArgs("keyEvent", target, new Class[]{processing.event.KeyEvent.class});
-
-        } else if (methodName.equals("touchEvent")) {
-            registerWithArgs("touchEvent", target, new Class[]{processing.event.TouchEvent.class});
-
-        } else {
-            registerNoArgs(methodName, target);
-        }
-    }
-
-    private void registerNoArgs(String name, Object o) {
-        Class<?> c = o.getClass();
-        try {
-            Method method = c.getMethod(name);
-            synchronized (registerLock) {
-                RegisteredMethods meth = registerMap.get(name);
-                if (meth == null) {
-                    meth = new RegisteredMethods();
-                    registerMap.put(name, meth);
-                }
-                meth.add(o, method);
-            }
-        } catch (NoSuchMethodException nsme) {
-            die("There is no public " + name + "() method in the class " +
-                        o.getClass().getName());
-
-        } catch (Exception e) {
-            die("Could not register " + name + " + () for " + o, e);
-        }
-    }
-
-    private void registerWithArgs(String name, Object o, Class<?> cargs[]) {
-        Class<?> c = o.getClass();
-        try {
-            Method method = c.getMethod(name, cargs);
-            synchronized (registerLock) {
-                RegisteredMethods meth = registerMap.get(name);
-                if (meth == null) {
-                    meth = new RegisteredMethods();
-                    registerMap.put(name, meth);
-                }
-                meth.add(o, method);
-            }
-        } catch (NoSuchMethodException nsme) {
-            die("There is no public " + name + "() method in the class " +
-                        o.getClass().getName());
-
-        } catch (Exception e) {
-            die("Could not register " + name + " + () for " + o, e);
-        }
-    }
-
-//  public void registerMethod(String methodName, Object target, Object... args) {
+    //  public void registerMethod(String methodName, Object target, Object... args) {
 //    registerWithArgs(methodName, target, args);
 //  }
-
-    public void unregisterMethod(String name, Object target) {
-        synchronized (registerLock) {
-            RegisteredMethods meth = registerMap.get(name);
-            if (meth == null) {
-                die("No registered methods with the name " + name + "() were found.");
-            }
-            try {
-//      Method method = o.getClass().getMethod(name, new Class[] {});
-//      meth.remove(o, method);
-                meth.remove(target);
-            } catch (Exception e) {
-                die("Could not unregister " + name + "() for " + target, e);
-            }
-        }
-    }
-
-    protected void handleMethods(String methodName, Object[] args) {
-        synchronized (registerLock) {
-            RegisteredMethods meth = registerMap.get(methodName);
-            if (meth != null) {
-                meth.handle(args);
-            }
-        }
-    }
 
 
   /*
@@ -1441,61 +1183,6 @@ public class PApplet implements PConstants {
     }
 
     /**
-     *
-     */
-    public void saveFrame() {
-        try {
-            g.save(savePath("screen-" + nf(frameCount, 4) + ".tif"));
-        } catch (SecurityException se) {
-            System.err.println("Can't use saveFrame() when running in a browser, " +
-                                       "unless using a signed applet.");
-        }
-    }
-
-    /**
-     * ( begin auto-generated from saveFrame.xml )
-     * <p>
-     * Saves a numbered sequence of images, one image each time the function is
-     * run. To save an image that is identical to the display window, run the
-     * function at the end of <b>draw()</b> or within mouse and key events such
-     * as <b>mousePressed()</b> and <b>keyPressed()</b>. If <b>saveFrame()</b>
-     * is called without parameters, it will save the files as screen-0000.tif,
-     * screen-0001.tif, etc. It is possible to specify the name of the sequence
-     * with the <b>filename</b> parameter and make the choice of saving TIFF,
-     * TARGA, PNG, or JPEG files with the <b>ext</b> parameter. These image
-     * sequences can be loaded into programs such as Apple's QuickTime software
-     * and made into movies. These files are saved to the sketch's folder,
-     * which may be opened by selecting "Show sketch folder" from the "Sketch"
-     * menu.<br />
-     * <br />
-     * It is not possible to use saveXxxxx() functions inside a web browser
-     * unless the sketch is <a
-     * href="http://wiki.processing.org/w/Sign_an_Applet">signed applet</A>. To
-     * save a file back to a server, see the <a
-     * href="http://wiki.processing.org/w/Saving_files_to_a_web-server">save to
-     * web</A> code snippet on the Processing Wiki.<br/>
-     * <br/ >
-     * All images saved from the main drawing window will be opaque. To save
-     * images without a background, use <b>createGraphics()</b>.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @param filename any sequence of letters or numbers that ends with either ".tif", ".tga", ".jpg", or ".png"
-     * @webref output:image
-     * @see PApplet#save(String)
-     * @see PApplet#createGraphics(int, int, String, String)
-     * @see PApplet#frameCount
-     */
-    public void saveFrame(String filename) {
-        try {
-            g.save(savePath(insertFrame(filename)));
-        } catch (SecurityException se) {
-            System.err.println("Can't use saveFrame() when running in a browser, " +
-                                       "unless using a signed applet.");
-        }
-    }
-
-    /**
      * Check a string for #### signs to see if the frame number should be
      * inserted. Used for functions like saveFrame() and beginRecord() to
      * replace the # marks with the frame number. If only one # is used,
@@ -1833,11 +1520,6 @@ public class PApplet implements PConstants {
         System.out.flush();
     }
 
-    static public void debug(String msg) {
-        if (DEBUG) {
-            println(msg);
-        }
-    }
     //
 
   /*
@@ -3524,138 +3206,7 @@ public class PApplet implements PConstants {
         return xml.save(saveFile(filename), options);
     }
 
-    /**
-     * @param input String to parse as a JSONObject
-     * @webref input:files
-     * @see PApplet#loadJSONObject(String)
-     * @see PApplet#saveJSONObject(JSONObject, String)
-     */
-    public JSONObject parseJSONObject(String input) {
-        return new JSONObject(new StringReader(input));
-    }
-
-    /**
-     * @param filename name of a file in the data folder or a URL
-     * @webref input:files
-     * @see JSONObject
-     * @see JSONArray
-     * @see PApplet#loadJSONArray(String)
-     * @see PApplet#saveJSONObject(JSONObject, String)
-     * @see PApplet#saveJSONArray(JSONArray, String)
-     */
-    public JSONObject loadJSONObject(String filename) {
-        // can't pass of createReader() to the constructor b/c of resource leak
-        BufferedReader reader = createReader(filename);
-        JSONObject outgoing = new JSONObject(reader);
-        try {
-            reader.close();
-        } catch (IOException e) {  // not sure what would cause this
-            e.printStackTrace();
-        }
-        return outgoing;
-    }
-
-    /**
-     * @nowebref
-     */
-    static public JSONObject loadJSONObject(File file) {
-        // can't pass of createReader() to the constructor b/c of resource leak
-        BufferedReader reader = createReader(file);
-        JSONObject outgoing = new JSONObject(reader);
-        try {
-            reader.close();
-        } catch (IOException e) {  // not sure what would cause this
-            e.printStackTrace();
-        }
-        return outgoing;
-    }
-
-    /**
-     * @param json     the JSONObject to save
-     * @param filename the name of the file to save to
-     * @webref output:files
-     * @see JSONObject
-     * @see JSONArray
-     * @see PApplet#loadJSONObject(String)
-     * @see PApplet#loadJSONArray(String)
-     * @see PApplet#saveJSONArray(JSONArray, String)
-     */
-    public boolean saveJSONObject(JSONObject json, String filename) {
-        return saveJSONObject(json, filename, null);
-    }
-
-    /**
-     * @param options "compact" and "indent=N", replace N with the number of spaces
-     */
-    public boolean saveJSONObject(JSONObject json, String filename, String options) {
-        return json.save(saveFile(filename), options);
-    }
-
-    /**
-     * @param input String to parse as a JSONArray
-     * @webref input:files
-     * @see JSONObject
-     * @see PApplet#loadJSONObject(String)
-     * @see PApplet#saveJSONObject(JSONObject, String)
-     */
-    public JSONArray parseJSONArray(String input) {
-        return new JSONArray(new StringReader(input));
-    }
-
-    /**
-     * @param filename name of a file in the data folder or a URL
-     * @webref input:files
-     * @see JSONArray
-     * @see PApplet#loadJSONObject(String)
-     * @see PApplet#saveJSONObject(JSONObject, String)
-     * @see PApplet#saveJSONArray(JSONArray, String)
-     */
-    public JSONArray loadJSONArray(String filename) {
-        // can't pass of createReader() to the constructor b/c of resource leak
-        BufferedReader reader = createReader(filename);
-        JSONArray outgoing = new JSONArray(reader);
-        try {
-            reader.close();
-        } catch (IOException e) {  // not sure what would cause this
-            e.printStackTrace();
-        }
-        return outgoing;
-    }
-
-    static public JSONArray loadJSONArray(File file) {
-        // can't pass of createReader() to the constructor b/c of resource leak
-        BufferedReader reader = createReader(file);
-        JSONArray outgoing = new JSONArray(reader);
-        try {
-            reader.close();
-        } catch (IOException e) {  // not sure what would cause this
-            e.printStackTrace();
-        }
-        return outgoing;
-    }
-
-    /**
-     * @param json     the JSONArray to save
-     * @param filename the name of the file to save to
-     * @webref output:files
-     * @see JSONObject
-     * @see JSONArray
-     * @see PApplet#loadJSONObject(String)
-     * @see PApplet#loadJSONArray(String)
-     * @see PApplet#saveJSONObject(JSONObject, String)
-     */
-    public boolean saveJSONArray(JSONArray json, String filename) {
-        return saveJSONArray(json, filename, null);
-    }
-
-    /**
-     * @param options "compact" and "indent=N", replace N with the number of spaces
-     */
-    public boolean saveJSONArray(JSONArray json, String filename, String options) {
-        return json.save(saveFile(filename), options);
-    }
-
-//  /**
+    //  /**
 //   * @webref input:files
 //   * @see Table
 //   * @see PApplet#loadTable(String)
@@ -3664,94 +3215,6 @@ public class PApplet implements PConstants {
 //  public Table createTable() {
 //    return new Table();
 //  }
-
-    /**
-     * @param filename name of a file in the data folder or a URL.
-     * @webref input:files
-     * @see Table
-     * @see PApplet#saveTable(Table, String)
-     * @see PApplet#loadBytes(String)
-     * @see PApplet#loadStrings(String)
-     * @see PApplet#loadXML(String)
-     */
-    public Table loadTable(String filename) {
-        return loadTable(filename, null);
-    }
-
-    /**
-     * Options may contain "header", "tsv", "csv", or "bin" separated by commas.
-     * <p>
-     * Another option is "dictionary=filename.tsv", which allows users to
-     * specify a "dictionary" file that contains a mapping of the column titles
-     * and the data types used in the table file. This can be far more efficient
-     * (in terms of speed and memory usage) for loading and parsing tables. The
-     * dictionary file can only be tab separated values (.tsv) and its extension
-     * will be ignored. This option was added in Processing 2.0.2.
-     *
-     * @param options may contain "header", "tsv", "csv", or "bin" separated by commas
-     */
-    public Table loadTable(String filename, String options) {
-        try {
-            String optionStr = Table.extensionOptions(true, filename, options);
-            String[] optionList = trim(split(optionStr, ','));
-
-            Table dictionary = null;
-            for (String opt : optionList) {
-                if (opt.startsWith("dictionary=")) {
-                    dictionary = loadTable(opt.substring(opt.indexOf('=') + 1), "tsv");
-                    return dictionary.typedParse(createInput(filename), optionStr);
-                }
-            }
-            InputStream input = createInput(filename);
-            if (input == null) {
-                System.err.println(filename + " does not exist or could not be read");
-                return null;
-            }
-            return new Table(input, optionStr);
-
-        } catch (IOException e) {
-            printStackTrace(e);
-            return null;
-        }
-    }
-
-    /**
-     * @param table    the Table object to save to a file
-     * @param filename the filename to which the Table should be saved
-     * @webref output:files
-     * @see Table
-     * @see PApplet#loadTable(String)
-     */
-    public boolean saveTable(Table table, String filename) {
-        return saveTable(table, filename, null);
-    }
-
-    /**
-     * @param options can be one of "tsv", "csv", "bin", or "html"
-     */
-    public boolean saveTable(Table table, String filename, String options) {
-//    String ext = checkExtension(filename);
-//    if (ext != null) {
-//      if (ext.equals("csv") || ext.equals("tsv") || ext.equals("bin") || ext.equals("html")) {
-//        if (options == null) {
-//          options = ext;
-//        } else {
-//          options = ext + "," + options;
-//        }
-//      }
-//    }
-
-        try {
-            // Figure out location and make sure the target path exists
-            File outputFile = saveFile(filename);
-            // Open a stream and take care of .gz if necessary
-            return table.save(outputFile, options);
-
-        } catch (IOException e) {
-            printStackTrace(e);
-            return false;
-        }
-    }
 
     //////////////////////////////////////////////////////////////
 
@@ -3904,123 +3367,6 @@ public class PApplet implements PConstants {
     //////////////////////////////////////////////////////////////
 
     // LISTING DIRECTORIES
-
-    public String[] listPaths(String path, String... options) {
-        File[] list = listFiles(path, options);
-
-        int offset = 0;
-        for (String opt : options) {
-            if (opt.equals("relative")) {
-                if (!path.endsWith(File.pathSeparator)) {
-                    path += File.pathSeparator;
-                }
-                offset = path.length();
-                break;
-            }
-        }
-        String[] outgoing = new String[list.length];
-        for (int i = 0; i < list.length; i++) {
-            // as of Java 1.8, substring(0) returns the original object
-            outgoing[i] = list[i].getAbsolutePath().substring(offset);
-        }
-        return outgoing;
-    }
-
-    public File[] listFiles(String path, String... options) {
-        File file = new File(path);
-        // if not an absolute path, make it relative to the sketch folder
-        if (!file.isAbsolute()) {
-            file = sketchFile(path);
-        }
-        return listFiles(file, options);
-    }
-
-    // "relative" -> no effect with the Files version, but important for listPaths
-    // "recursive"
-    // "extension=js" or "extensions=js|csv|txt" (no dot)
-    // "directories" -> only directories
-    // "files" -> only files
-    // "hidden" -> include hidden files (prefixed with .) disabled by default
-    static public File[] listFiles(File base, String... options) {
-        boolean recursive = false;
-        String[] extensions = null;
-        boolean directories = true;
-        boolean files = true;
-        boolean hidden = false;
-
-        for (String opt : options) {
-            if (opt.equals("recursive")) {
-                recursive = true;
-            } else if (opt.startsWith("extension=")) {
-                extensions = new String[]{opt.substring(10)};
-            } else if (opt.startsWith("extensions=")) {
-                extensions = split(opt.substring(10), ',');
-            } else if (opt.equals("files")) {
-                directories = false;
-            } else if (opt.equals("directories")) {
-                files = false;
-            } else if (opt.equals("hidden")) {
-                hidden = true;
-            } else if (opt.equals("relative")) {
-                // ignored
-            } else {
-                throw new RuntimeException(opt + " is not a listFiles() option");
-            }
-        }
-
-        if (extensions != null) {
-            for (int i = 0; i < extensions.length; i++) {
-                extensions[i] = "." + extensions[i];
-            }
-        }
-
-        if (!files && !directories) {
-            // just make "only files" and "only directories" mean... both
-            files = true;
-            directories = true;
-        }
-
-        if (!base.canRead()) {
-            return null;
-        }
-
-        List<File> outgoing = new ArrayList<>();
-        listFilesImpl(base, recursive, extensions, hidden, directories, files, outgoing);
-        return outgoing.toArray(new File[0]);
-    }
-
-    static void listFilesImpl(File folder, boolean recursive,
-                              String[] extensions, boolean hidden,
-                              boolean directories, boolean files,
-                              List<File> list) {
-        File[] items = folder.listFiles();
-        if (items != null) {
-            for (File item : items) {
-                String name = item.getName();
-                if (!hidden && name.charAt(0) == '.') {
-                    continue;
-                }
-                if (item.isDirectory()) {
-                    if (recursive) {
-                        listFilesImpl(item, recursive, extensions, hidden, directories, files, list);
-                    }
-                    if (directories) {
-                        list.add(item);
-                    }
-                } else if (files) {
-                    if (extensions == null) {
-                        list.add(item);
-                    } else {
-                        for (String ext : extensions) {
-                            if (item.getName().toLowerCase().endsWith(ext)) {
-                                list.add(item);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     //////////////////////////////////////////////////////////////
 
@@ -7658,13 +7004,6 @@ public class PApplet implements PConstants {
 //    surface = g.createSurface();
 //    return surface.initComponent(this);
 //  }
-
-    /**
-     * Convenience method, should only be called by PSurface subclasses.
-     */
-    static public void hideMenuBar() {
-        // do nothing
-    }
 
     //////////////////////////////////////////////////////////////
 
