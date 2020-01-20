@@ -43,7 +43,8 @@ public class PSurfaceJOGL implements PSurface {
     }
 
     public void init() {
-        GLCapabilities caps = new GLCapabilities(GLProfile.getDefault());
+        GLProfile profile = GLProfile.getDefault();
+        GLCapabilities caps = new GLCapabilities(profile);
         caps.setAlphaBits(PGL.REQUESTED_ALPHA_BITS);
         caps.setDepthBits(PGL.REQUESTED_DEPTH_BITS);
         caps.setStencilBits(PGL.REQUESTED_STENCIL_BITS);
@@ -53,7 +54,7 @@ public class PSurfaceJOGL implements PSurface {
         caps.setOnscreen(true);
         pgl.setCaps(caps);
 
-        drawable = GLDrawableFactory.getEGLFactory().createOffscreenAutoDrawable(
+        drawable = GLDrawableFactory.getFactory(profile).createOffscreenAutoDrawable(
                 null,
                 caps,
                 null,
